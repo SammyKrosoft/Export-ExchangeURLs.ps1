@@ -55,7 +55,7 @@ Will export all URLs for all Exchange servers' virtual directories into a file n
 Will just print the results into the PowerShell console.
 
 .NOTES
-None
+V3 -> adding switches to select which Exchange version to check (not finished yet)
 
 .LINK
     https://github.com/SammyKrosoft
@@ -79,7 +79,7 @@ $DebugPreference = "Continue"
 # Set Error Action to your needs
 $ErrorActionPreference = "SilentlyContinue"
 #Script Version
-$ScriptVersion = "2"
+$ScriptVersion = "3 beta"
 <# Version History
 v1.0 -> v2
 Added export of Outlook Anywhere with External Hostname (E2010, E2013, E2016) and Internal Hostname (not existing in E2010)
