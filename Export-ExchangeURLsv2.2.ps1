@@ -31,6 +31,7 @@ Will just print the results into the PowerShell console.
 
 .NOTES
 Script reviewed 28th May 2019
+v2.2 - Commented vDir names
 
 .LINK
     https://github.com/SammyKrosoft
@@ -50,7 +51,7 @@ $DebugPreference = "Continue"
 # Set Error Action to your needs
 $ErrorActionPreference = "SilentlyContinue"
 #Script Version
-$ScriptVersion = "2"
+$ScriptVersion = "2.2"
 <# Version History
 v1.0 -> v2
 Added export of Outlook Anywhere with External Hostname (E2010, E2013, E2016) and Internal Hostname (not existing in E2010)
@@ -120,32 +121,31 @@ foreach( $Server in $Servers)
 	#$Obj | Add-Member -MemberType NoteProperty -Name "ServiceToDump-ExernalURL" -Value $ServiceToDump.ExternalURL	
 		
 	$Obj | Add-Member -MemberType NoteProperty -Name "ServerName" -Value $Server.Name
-	$Obj | Add-Member -MemberType NoteProperty -Name "EASName" -Value $EAS.Name
+	#$Obj | Add-Member -MemberType NoteProperty -Name "EASvDirName" -Value $EAS.Name
     $Obj | Add-Member -MemberType NoteProperty -Name "EASInternalURL" -Value $EAS.InternalURL
 	$Obj | Add-Member -MemberType NoteProperty -Name "EASExternalURL" -Value $EAS.ExternalURL
-	$Obj | Add-Member -MemberType NoteProperty -Name "OABName" -Value $OAB.Name
+	#$Obj | Add-Member -MemberType NoteProperty -Name "OABvDirName" -Value $OAB.Name
 	$Obj | Add-Member -MemberType NoteProperty -Name "OABInternalURL" -Value $OAB.InternalURL
 	$Obj | Add-Member -MemberType NoteProperty -Name "OABExernalURL" -Value $OAB.ExternalURL
-	$Obj | Add-Member -MemberType NoteProperty -Name "OWAName" -Value $OWA.Name
+	#$Obj | Add-Member -MemberType NoteProperty -Name "OWAvDirName" -Value $OWA.Name
 	$Obj | Add-Member -MemberType NoteProperty -Name "OWAInternalURL" -Value $OWA.InternalURL
 	$Obj | Add-Member -MemberType NoteProperty -Name "OWAExernalURL" -Value $OWA.ExternalURL
-	$Obj | Add-Member -MemberType NoteProperty -Name "ECPName" -Value $ECP.Name
+	#$Obj | Add-Member -MemberType NoteProperty -Name "ECPvDirName" -Value $ECP.Name
 	$Obj | Add-Member -MemberType NoteProperty -Name "ECPInternalURL" -Value $ECP.InternalURL
 	$Obj | Add-Member -MemberType NoteProperty -Name "ECPExernalURL" -Value $ECP.ExternalURL	
-	$Obj | Add-Member -MemberType NoteProperty -Name "AutoDiscName" -Value $AutoDisc.Name
 	$Obj | Add-Member -MemberType NoteProperty -Name "AutoDiscURI" -Value $AutoDisc.AutodiscoverServiceInternalURI
-	$Obj | Add-Member -MemberType NoteProperty -Name "EWSName" -Value $EWS.Name
+	#$Obj | Add-Member -MemberType NoteProperty -Name "EWSName" -Value $EWS.Name
 	$Obj | Add-Member -MemberType NoteProperty -Name "EWSInternalURL" -Value $EWS.InternalURL
     $Obj | Add-Member -MemberType NoteProperty -Name "EWSExernalURL" -Value $EWS.ExternalURL
     $Obj | Add-Member -MemberType NoteProperty -Name "OutlookAnywhere-InternalHostName(NoneForE2010)" -Value $OA.InternalHostName
     $Obj | Add-Member -MemberType NoteProperty -Name "OutlookAnywhere-ExternalHostNAme(E2010+)" -Value $OA.ExternalHostName
 		
 		
-		#Appending the current object into the $report variable (it's an array, remember)
-        $report += $Obj
-		
-		#Incrementing the Counter for the progress bar
-        $Counter++
+	#Appending the current object into the $report variable (it's an array, remember)
+	$report += $Obj
+	
+	#Incrementing the Counter for the progress bar
+	$Counter++
     }
 	
 	
