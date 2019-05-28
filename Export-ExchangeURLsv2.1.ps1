@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     This script dumps the URLs of all your Exchange servers in a CSV file
 
@@ -10,10 +10,6 @@
 .PARAMETER DoNotExport
 	This parameter tells the script not to export to a file. The results will just be
 	dumped to the screen.
-
-.PARAMETER CheckVersion
-	This parameter dumps the current script version - the script stops processing after displaying the
-	version if this parameter is specified, no matter what other parameter is also specified.
 
 .INPUTS
     None.
@@ -30,15 +26,13 @@ Will export all URLs for all Exchange servers' virtual directories into a file n
 Will just print the results into the PowerShell console.
 
 .NOTES
-Script reviewed 28th May 2019
+None
 
 .LINK
     https://github.com/SammyKrosoft
 #>
-[CmdletBinding(DefaultParameterSetName="NormalRun")]
 Param(
-	[Parameter(Mandatory = $False, Position = 1, ParameterSetName = "NormalRun")] [switch]$DoNotExport,
-	[Parameter(Mandatory = $False, Position = 2, ParameterSetName = "checkversion")] [Switch] $CheckVersion
+    [Parameter(Mandatory = $False, Position = 1)] [switch]$DoNotExport
 )
 
 <# ------- SCRIPT_HEADER (Only Get-Help comments and Param() above this point) ------- #>
@@ -62,7 +56,6 @@ Added -DoNoExport switch, to not export to a file...
 # $LogOrReportFile1 = "$PSScriptRoot\ReportOrLogFile_$(get-date -f yyyy-MM-dd-hh-mm-ss).csv"
 # Other Option for Log or report file definition (use one of these)
 # $LogOrReportFile2 = "$PSScriptRoot\PowerShellScriptExecuted-$(Get-Date -Format 'dd-MMMM-yyyy-hh-mm-ss-tt').txt"
-If ($CheckVersion) {Write-Host "Script Version v$ScriptVersion";exit}
 <# ---------------------------- /SCRIPT_HEADER ---------------------------- #>
 <# -------------------------- DECLARATIONS -------------------------- #>
 <# /DECLARATIONS #>
@@ -73,8 +66,8 @@ If ($CheckVersion) {Write-Host "Script Version v$ScriptVersion";exit}
 #Note: you must have Exchange Admin tools installed on the machine where you run this.
 Add-PSSnapin microsoft.exchange.management.powershell.admin -erroraction 'SilentlyContinue' | OUT-NULL
 Add-PSsnapin Microsoft.Exchange.Management.PowerShell.E2010 -erroraction 'SilentlyContinue' | OUT-NULL
-Add-PSsnapin Microsoft.Exchange.Management.PowerShell.Setup -erroraction 'SilentlyContinue' | OUT-NULL
-Add-PSsnapin Microsoft.Exchange.Management.PowerShell.Support -erroraction 'SilentlyContinue' | OUT-NULL
+Add-PSsnapin Microsoft.Exchange.Management.PowerShell.Setup -erroraction 'SilentlyContinue'  | OUT-NULL
+Add-PSsnapin Microsoft.Exchange.Management.PowerShell.Support -erroraction 'SilentlyContinue'  | OUT-NULL
 #For Exchange 2007 and 2013, add the corresponding modules/snapins, or simply execute the script into an Exchange MAnagement Shell :-)
 
 #Getting all Exchange servers in an array
@@ -100,7 +93,7 @@ foreach( $Server in $Servers)
 	#For the current server, get the main vDir settings (including AutodiscoverServiceInternalURI which is important to determine 
 	#whether the Autodiscover service will be hit using the Load Balancer (recommended).
 	$EAS = Get-ActiveSyncVirtualDirectory -Server $Server -ADPropertiesOnly | Select Name, InternalURL,externalURL
-	$OAB = Get-OabVirtualDirectory -Server $Server -ADPropertiesOnly | ? {$_.Name -like "*OAB*"} | Select Name,internalURL,externalURL
+	$OAB = Get-OabVirtualDirectory -Server $Server -ADPropertiesOnly | Select Name,internalURL,externalURL
 	$OWA = Get-OwaVirtualDirectory -Server $Server -ADPropertiesOnly | Select Name,InternalURL,externalURL
 	$ECP = Get-EcpVirtualDirectory -Server $Server -ADPropertiesOnly | Select Name,InternalURL,externalURL
 	$AutoDisc = get-ClientAccessServer $Server | Select name,identity,AutodiscoverServiceInternalUri
@@ -120,23 +113,22 @@ foreach( $Server in $Servers)
 	#$Obj | Add-Member -MemberType NoteProperty -Name "ServiceToDump-ExernalURL" -Value $ServiceToDump.ExternalURL	
 		
 	$Obj | Add-Member -MemberType NoteProperty -Name "ServerName" -Value $Server.Name
-	$Obj | Add-Member -MemberType NoteProperty -Name "EASName" -Value $EAS.Name
-    $Obj | Add-Member -MemberType NoteProperty -Name "EASInternalURL" -Value $EAS.InternalURL
-	$Obj | Add-Member -MemberType NoteProperty -Name "EASExternalURL" -Value $EAS.ExternalURL
-	$Obj | Add-Member -MemberType NoteProperty -Name "OABName" -Value $OAB.Name
-	$Obj | Add-Member -MemberType NoteProperty -Name "OABInternalURL" -Value $OAB.InternalURL
-	$Obj | Add-Member -MemberType NoteProperty -Name "OABExernalURL" -Value $OAB.ExternalURL
-	$Obj | Add-Member -MemberType NoteProperty -Name "OWAName" -Value $OWA.Name
-	$Obj | Add-Member -MemberType NoteProperty -Name "OWAInternalURL" -Value $OWA.InternalURL
-	$Obj | Add-Member -MemberType NoteProperty -Name "OWAExernalURL" -Value $OWA.ExternalURL
-	$Obj | Add-Member -MemberType NoteProperty -Name "ECPName" -Value $ECP.Name
-	$Obj | Add-Member -MemberType NoteProperty -Name "ECPInternalURL" -Value $ECP.InternalURL
-	$Obj | Add-Member -MemberType NoteProperty -Name "ECPExernalURL" -Value $ECP.ExternalURL	
-	$Obj | Add-Member -MemberType NoteProperty -Name "AutoDiscName" -Value $AutoDisc.Name
-	$Obj | Add-Member -MemberType NoteProperty -Name "AutoDiscURI" -Value $AutoDisc.AutodiscoverServiceInternalURI
-	$Obj | Add-Member -MemberType NoteProperty -Name "EWSName" -Value $EWS.Name
-	$Obj | Add-Member -MemberType NoteProperty -Name "EWSInternalURL" -Value $EWS.InternalURL
-    $Obj | Add-Member -MemberType NoteProperty -Name "EWSExernalURL" -Value $EWS.ExternalURL
+	$Obj | Add-Member -MemberType NoteProperty -Name "AutoDisc-URI" -Value $AutoDisc.AutodiscoverServiceInternalURI
+    #$Obj | Add-Member -MemberType NoteProperty -Name "EAS-vDirNAme" -Value $EAS.Name
+    $Obj | Add-Member -MemberType NoteProperty -Name "EAS-InternalURL" -Value $EAS.InternalURL
+	$Obj | Add-Member -MemberType NoteProperty -Name "EAS-ExternalURL" -Value $EAS.ExternalURL
+	#$Obj | Add-Member -MemberType NoteProperty -Name "OAB-vDirNAme" -Value $OAB.Name
+	$Obj | Add-Member -MemberType NoteProperty -Name "OAB-InternalURL" -Value $OAB.InternalURL
+	$Obj | Add-Member -MemberType NoteProperty -Name "OAB-ExernalURL" -Value $OAB.ExternalURL
+	#$Obj | Add-Member -MemberType NoteProperty -Name "OWA-vDirNAme" -Value $OWA.Name
+	$Obj | Add-Member -MemberType NoteProperty -Name "OWA-InternalURL" -Value $OWA.InternalURL
+	$Obj | Add-Member -MemberType NoteProperty -Name "OWA-ExernalURL" -Value $OWA.ExternalURL
+	#$Obj | Add-Member -MemberType NoteProperty -Name "ECP-vDirNAme" -Value $ECP.Name
+	$Obj | Add-Member -MemberType NoteProperty -Name "ECP-InternalURL" -Value $ECP.InternalURL
+	$Obj | Add-Member -MemberType NoteProperty -Name "ECP-ExernalURL" -Value $ECP.ExternalURL	
+	#$Obj | Add-Member -MemberType NoteProperty -Name "EWS-vDirNAme" -Value $EWS.Name
+	$Obj | Add-Member -MemberType NoteProperty -Name "EWS-InternalURL" -Value $EWS.InternalURL
+    $Obj | Add-Member -MemberType NoteProperty -Name "EWS-ExernalURL" -Value $EWS.ExternalURL
     $Obj | Add-Member -MemberType NoteProperty -Name "OutlookAnywhere-InternalHostName(NoneForE2010)" -Value $OA.InternalHostName
     $Obj | Add-Member -MemberType NoteProperty -Name "OutlookAnywhere-ExternalHostNAme(E2010+)" -Value $OA.ExternalHostName
 		
@@ -157,7 +149,7 @@ foreach( $Server in $Servers)
 		$report | Export-csv -notypeinformation -encoding Unicode $CSVFilename
 		Notepad $CSVFilename
 	} Else {
-		Write-Host "Won't create a file because you specified the -DoNotExport parameter" -ForegroundColor Yellow -BackgroundColor Blue
+		Write-Host "Won't create a file - you specified the -DoNotExport parameter..." -ForegroundColor Yellow -BackgroundColor Blue
 		Write-Host "Just dumping to the screen this time ..." -ForegroundColor DarkBlue -BackgroundColor red
 		$Report
 	}
