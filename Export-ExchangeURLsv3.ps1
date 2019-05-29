@@ -7,26 +7,19 @@
 	or dumps the info to the screen (you can then redirect to a file if you wish) if you
 	use the -DoNotExport switch with the script.
 
-.PARAMETER E2007
-	When specified, will export E2007 only, or if specified with E2013 / E2016, will export
-	the specified versions.
-	
-	When none of E2007, E2013, E2016 are specified, all versions are scanned.
-
 .PARAMETER E2010
 	When specified, will export E2010 only, or if specified with E2007 / E2013 / 2016, will export
 	the specified versions.
 	
 	When none of E2007, E2013, E2016 are specified, all versions are scanned.
 
-
-.PARAMETER E2013Only
+.PARAMETER E2013
 	When specified, will export E2013 only, or if specified with E2007 / E2016, will export
 	the specified versions.
 
 	When none of E2007, E2013, E2016 are specified, all versions are scanned.
 
-.PARAMETER E2016Only
+.PARAMETER E2016
 	When specified, will export E2016 only, or if specified with E2007 / E2013, will export
 	the specified versions.
 
@@ -63,7 +56,6 @@ V3 -> adding switches to select which Exchange version to check (not finished ye
 [CmdletBinding(DefaultParameterSetName="NormalRun")]
 Param(
 	[Parameter(Mandatory = $False, Position = 1, ParameterSetName = "NormalRun")] [switch]$DoNotExport,
-	[Parameter(Mandatory = $False, Position = 2, ParameterSetName = "NormalRun")] [switch]$E2007,
 	[Parameter(Mandatory = $False, Position = 3, ParameterSetName = "NormalRun")] [switch]$E2010,
 	[Parameter(Mandatory = $False, Position = 4, ParameterSetName = "NormalRun")] [switch]$E2013,
 	[Parameter(Mandatory = $False, Position = 5, ParameterSetName = "NormalRun")] [switch]$E2016,
@@ -111,6 +103,11 @@ Add-PSsnapin Microsoft.Exchange.Management.PowerShell.Support -erroraction 'Sile
 #just change the $Servers = @(Get-ClientAccessServer) line with $Servers = @(Get-content ServersList.txt) for example to get servers from a list...
 $Servers = @(Get-ClientAccessServer)
 
+if ($E2010) {$ServerVersionFilter += "$_.AdminDisplayVersion -match '14.'"}
+if ($E2013) {$ServerVersionFilter += "$_.AdminDisplayVersion -match '15.'"}
+
+
+
 #Initializing counters to setup a progress bar based on the number of servers browsed
 # (more useful in an environment where you have dozen of servers - had 45 in mine)
 	$Counter=0
@@ -149,21 +146,21 @@ foreach( $Server in $Servers)
 	#$Obj | Add-Member -MemberType NoteProperty -Name "ServiceToDump-ExernalURL" -Value $ServiceToDump.ExternalURL	
 		
 	$Obj | Add-Member -MemberType NoteProperty -Name "ServerName" -Value $Server.Name
-	$Obj | Add-Member -MemberType NoteProperty -Name "EASName" -Value $EAS.Name
+	#$Obj | Add-Member -MemberType NoteProperty -Name "EASName" -Value $EAS.Name
     $Obj | Add-Member -MemberType NoteProperty -Name "EASInternalURL" -Value $EAS.InternalURL
 	$Obj | Add-Member -MemberType NoteProperty -Name "EASExternalURL" -Value $EAS.ExternalURL
-	$Obj | Add-Member -MemberType NoteProperty -Name "OABName" -Value $OAB.Name
+	# $Obj | Add-Member -MemberType NoteProperty -Name "OABName" -Value $OAB.Name
 	$Obj | Add-Member -MemberType NoteProperty -Name "OABInternalURL" -Value $OAB.InternalURL
 	$Obj | Add-Member -MemberType NoteProperty -Name "OABExernalURL" -Value $OAB.ExternalURL
-	$Obj | Add-Member -MemberType NoteProperty -Name "OWAName" -Value $OWA.Name
+	#$Obj | Add-Member -MemberType NoteProperty -Name "OWAName" -Value $OWA.Name
 	$Obj | Add-Member -MemberType NoteProperty -Name "OWAInternalURL" -Value $OWA.InternalURL
 	$Obj | Add-Member -MemberType NoteProperty -Name "OWAExernalURL" -Value $OWA.ExternalURL
-	$Obj | Add-Member -MemberType NoteProperty -Name "ECPName" -Value $ECP.Name
+	# $Obj | Add-Member -MemberType NoteProperty -Name "ECPName" -Value $ECP.Name
 	$Obj | Add-Member -MemberType NoteProperty -Name "ECPInternalURL" -Value $ECP.InternalURL
 	$Obj | Add-Member -MemberType NoteProperty -Name "ECPExernalURL" -Value $ECP.ExternalURL	
 	$Obj | Add-Member -MemberType NoteProperty -Name "AutoDiscName" -Value $AutoDisc.Name
 	$Obj | Add-Member -MemberType NoteProperty -Name "AutoDiscURI" -Value $AutoDisc.AutodiscoverServiceInternalURI
-	$Obj | Add-Member -MemberType NoteProperty -Name "EWSName" -Value $EWS.Name
+	# $Obj | Add-Member -MemberType NoteProperty -Name "EWSName" -Value $EWS.Name
 	$Obj | Add-Member -MemberType NoteProperty -Name "EWSInternalURL" -Value $EWS.InternalURL
     $Obj | Add-Member -MemberType NoteProperty -Name "EWSExernalURL" -Value $EWS.ExternalURL
     $Obj | Add-Member -MemberType NoteProperty -Name "OutlookAnywhere-InternalHostName(NoneForE2010)" -Value $OA.InternalHostName
