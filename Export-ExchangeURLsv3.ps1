@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
-    This script dumps the URLs of all your Exchange servers in a CSV file
-
+	This script dumps the URLs of all your Exchange servers in a CSV file
+	
 .DESCRIPTION
 	This script exports the URLs of all the Exchange servers in a CSV file by default,
 	or dumps the info to the screen (you can then redirect to a file if you wish) if you
@@ -53,13 +53,16 @@ V3 -> adding switches to select which Exchange version to check (not finished ye
 .LINK
     https://github.com/SammyKrosoft
 #>
-[CmdletBinding(DefaultParameterSetName="NormalRun")]
+[CmdletBinding(DefaultParameterSetName = "E2010")]
 Param(
-	[Parameter(Mandatory = $False, Position = 1, ParameterSetName = "NormalRun")] [switch]$DoNotExport,
-	[Parameter(Mandatory = $False, Position = 3, ParameterSetName = "NormalRun")] [switch]$E2010,
-	[Parameter(Mandatory = $False, Position = 4, ParameterSetName = "NormalRun")] [switch]$E2013,
-	[Parameter(Mandatory = $False, Position = 5, ParameterSetName = "NormalRun")] [switch]$E2016,
-	[Parameter(Mandatory = $False, Position = 6, ParameterSetName = "checkversion")] [Switch] $CheckVersion
+	[Parameter(Mandatory = $False, Position = 1, ParameterSetName = "Ex2010")]
+	[Parameter(Mandatory = $False, Position = 1, ParameterSetName = "Ex2013")]
+	[Parameter(Mandatory = $False, Position = 1, ParameterSetName = "Ex2016")]
+	[switch]$DoNotExport,
+	[Parameter(Mandatory = $False, Position = 2, ParameterSetName = "Ex2010")][switch]$E2010,
+	[Parameter(Mandatory = $False, Position = 3, ParameterSetName = "Ex2013")][switch]$E2013,
+	[Parameter(Mandatory = $False, Position = 4, ParameterSetName = "Ex2016")][switch]$E2016,
+	[Parameter(Mandatory = $False, Position = 5, ParameterSetName = "checkversion")][Switch] $CheckVersion
 )
 
 <# ------- SCRIPT_HEADER (Only Get-Help comments and Param() above this point) ------- #>
@@ -103,9 +106,25 @@ Add-PSsnapin Microsoft.Exchange.Management.PowerShell.Support -erroraction 'Sile
 #just change the $Servers = @(Get-ClientAccessServer) line with $Servers = @(Get-content ServersList.txt) for example to get servers from a list...
 $Servers = @(Get-ClientAccessServer)
 
-if ($E2010) {$ServerVersionFilter += "$_.AdminDisplayVersion -match '14.'"}
-if ($E2013) {$ServerVersionFilter += "$_.AdminDisplayVersion -match '15.'"}
+#Sample Server Filtering:
+# $Exchange2010CASServers = Get-ExchangeServer * | ? {$_.serverRole -match "Client" -and $_.AdminDisplayVersion -match '14.'} | Ft name, serverRole, AdminDisplayVersion
 
+$ServerVersionFilter = $null
+
+$ExchangeServers = Get-ExchangeServer * | ? {$_.serverRole -match 'Client'}
+
+#Filtering out Exchange versions
+# 14.x => Exchange 2010
+# 15.0 => Exchange 2013
+# 15.1 => Exchange 2016
+if ($E2010) {$ExchangeServers = $ExchangeServers | ? {$_.AdminDisplayVersion -match '14.'}}
+if ($E2013) {$ExchangeServers = $ExchangeServers | ? {$_.AdminDisplayVersion -match '15.0'}}
+if ($E2016) {$ExchangeServers = $ExchangeServers | ? {$_.AdminDisplayVersion -match '15.1'}}
+
+$ExchangeServers
+
+#DEBUG PURPOSE : MANUAL EXIT (BREAK) BELOW - COMMENT WHEN NOT DEBUGGING
+exit
 
 
 #Initializing counters to setup a progress bar based on the number of servers browsed
@@ -146,6 +165,7 @@ foreach( $Server in $Servers)
 	#$Obj | Add-Member -MemberType NoteProperty -Name "ServiceToDump-ExernalURL" -Value $ServiceToDump.ExternalURL	
 		
 	$Obj | Add-Member -MemberType NoteProperty -Name "ServerName" -Value $Server.Name
+	$Obj | Add-Member -MemberType NoteProperty -Name "ServerVersion" -Value $Server.AdminDisplayVersion
 	#$Obj | Add-Member -MemberType NoteProperty -Name "EASName" -Value $EAS.Name
     $Obj | Add-Member -MemberType NoteProperty -Name "EASInternalURL" -Value $EAS.InternalURL
 	$Obj | Add-Member -MemberType NoteProperty -Name "EASExternalURL" -Value $EAS.ExternalURL
