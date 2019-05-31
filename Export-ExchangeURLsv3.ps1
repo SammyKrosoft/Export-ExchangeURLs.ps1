@@ -104,27 +104,71 @@ Add-PSsnapin Microsoft.Exchange.Management.PowerShell.Support -erroraction 'Sile
 #Getting all Exchange servers in an array
 #Note: you can target only one server, or get servers list from a file,
 #just change the $Servers = @(Get-ClientAccessServer) line with $Servers = @(Get-content ServersList.txt) for example to get servers from a list...
-$Servers = @(Get-ClientAccessServer)
+$Servers = @()
 
 #Sample Server Filtering:
 # $Exchange2010CASServers = Get-ExchangeServer * | ? {$_.serverRole -match "Client" -and $_.AdminDisplayVersion -match '14.'} | Ft name, serverRole, AdminDisplayVersion
 
 $ServerVersionFilter = $null
 
-$ExchangeServers = Get-ExchangeServer * | ? {$_.serverRole -match 'Client'}
+$ExchangeServers = Get-ExchangeServer *
 
 #Filtering out Exchange versions
 # 14.x => Exchange 2010
 # 15.0 => Exchange 2013
 # 15.1 => Exchange 2016
-if ($E2010) {$ExchangeServers = $ExchangeServers | ? {$_.AdminDisplayVersion -match '14.'}}
-if ($E2013) {$ExchangeServers = $ExchangeServers | ? {$_.AdminDisplayVersion -match '15.0'}}
-if ($E2016) {$ExchangeServers = $ExchangeServers | ? {$_.AdminDisplayVersion -match '15.1'}}
+if ($E2010) {
+	Write-debug "E2010 switch on";
+	$ExchangeServers = $ExchangeServers | ? {$_.ServerRole -match "Client" -and $_.AdminDisplayVersion -match '14.'}
+	If ($ExchangeServers -eq $null) {
+		$msg = "No Exchange 2010 servers found - Try -E2013 or E2016 or no switch ... exiting.";
+		Write-host $msg
+		exit
+	} Else {
+		$msg = "Found $($ExchangeServers.count) Exchange 2010 servers."
+		Write-host $msg
+	}
+}
+if ($E2013) {
+	Write-debug "E2013 switch on";$ExchangeServers = $ExchangeServers | ? {$_.AdminDisplayVersion -match '15.0'}
+	If ($ExchangeServers -eq $null) {
+		$msg = "No Exchange 2013 servers found - Try -E2013 or E2016 or no switch ... exiting.";
+		Write-host $msg
+		exit
+	}Else {
+		$msg = "Found $($ExchangeServers.count) Exchange 2013 servers."
+		Write-host $msg
+	}
+}
+if ($E2016) {
+	Write-debug "E2016 switch on";$ExchangeServers = $ExchangeServers | ? {$_.AdminDisplayVersion -match '15.1'}
+	If ($ExchangeServers -eq $null) {
+		$msg = "No Exchange 2016 servers found - Try -E2013 or E2016 or no switch ... exiting.";
+		Write-host $msg
+		exit
+	}Else {
+		$msg = "Found $($ExchangeServers.count) Exchange 2016 servers."
+		Write-host $msg
+	}
+}
 
-$ExchangeServers
+If (!$E2010 -and !$E2013 -and !$E2016) {
+	Write-debug "No switches - Discovering all servers`nNOTE: always run scripts from highest version of Exchange otherwise you won't see all servers";
+	If ($ExchangeServers -eq $null) {
+		$msg = "No Exchange Exchange 2010, 2013 or 2016 servers found ... exiting.";
+		Write-host $msg
+		exit
+	}Else {
+		$msg = "Found $($ExchangeServers.count) Exchange servers."
+		Write-host $msg
+	}
+}
 
-#DEBUG PURPOSE : MANUAL EXIT (BREAK) BELOW - COMMENT WHEN NOT DEBUGGING
-exit
+$Servers = $ExchangeServers
+$Servers | Select Name, ServerRole, @{Label = "Exchange Version"; Expression = {$_.AdminDisplayVersion}} | ft -a
+
+# DEBUG PURPOSE : MANUAL EXIT (BREAK) BELOW - COMMENT WHEN NOT DEBUGGING
+# exit
 
 
 #Initializing counters to setup a progress bar based on the number of servers browsed
@@ -148,7 +192,14 @@ foreach( $Server in $Servers)
 	$OAB = Get-OabVirtualDirectory -Server $Server -ADPropertiesOnly | ? {$_.Name -like "*OAB*"} | Select Name,internalURL,externalURL
 	$OWA = Get-OwaVirtualDirectory -Server $Server -ADPropertiesOnly | Select Name,InternalURL,externalURL
 	$ECP = Get-EcpVirtualDirectory -Server $Server -ADPropertiesOnly | Select Name,InternalURL,externalURL
-	$AutoDisc = get-ClientAccessServer $Server | Select name,identity,AutodiscoverServiceInternalUri
+	#testing if there is an Exchange 2013/2016 in the $ExchangeServers collection - If TRUE then use Get-ClientAccessService, ELSE user Get-ClientAccessServer
+	$test = ($ExchangeServers | % {$_.AdminDisplayVersion -match "15."}) -join ";"
+	If ($test -match "$true"){
+		$AutoDisc = get-ClientAccessService $($Server.Name) | Select name,identity,AutodiscoverServiceInternalUri
+	} Else {
+		$AutoDisc = get-ClientAccessServer $($Server.Name) | Select name,identity,AutodiscoverServiceInternalUri
+	}
+	
 	$EWS = Get-WebServicesVirtualDirectory -Server $Server -ADPropertiesOnly | Select NAme,identity,internalURL,externalURL
     $OA = Get-OutlookAnywhere -Server $Server -ADPropertiesOnly | Select Name,InternalHostName, ExternalHostName
     #If you want to dump more things, use the below line as a sample:
