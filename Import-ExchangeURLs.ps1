@@ -53,9 +53,9 @@ Param(
 $stopwatch = [system.diagnostics.stopwatch]::StartNew()
 #Using Write-Debug and playing with $DebugPreference -> "Continue" will output whatever you put on Write-Debug "Your text/values"
 # and "SilentlyContinue" will output nothing on Write-Debug "Your text/values"
-$DebugPreference = "Continue"
+$DebugPreference = "Stop"
 # Set Error Action to your needs
-$ErrorActionPreference = "SilentlyContinue"
+$ErrorActionPreference = "Stop"
 #Script Version
 $ScriptVersion = "0.1"
 <# Version changes
@@ -72,7 +72,7 @@ $OutputReport = "$ScriptPath\$($ScriptName)_$(get-date -f yyyy-MM-dd-hh-mm-ss).c
 $ScriptLog = "$ScriptPath\$($ScriptName)-$(Get-Date -Format 'dd-MMMM-yyyy-hh-mm-ss-tt').txt"
 <# ---------------------------- /SCRIPT_HEADER ---------------------------- #>
 <# -------------------------- DECLARATIONS -------------------------- #>
-
+# $ErrorActionPreference = Continue
 <# /DECLARATIONS #>
 <# -------------------------- FUNCTIONS -------------------------- #>
 function import-ValidCSV {
@@ -107,20 +107,59 @@ function import-ValidCSV {
         {
                 if (!($inputTest | ? {$_.name -eq $requiredColumn}))
                 {
-                        write-error "$inputFile is missing the $requiredColumn column"
+                        Write-host "$inputFile is missing the $requiredColumn column" -BackgroundColor yellow -ForegroundColor red
                         exit 10
                 }
         }
-        $csvImport
+        $csvImport | ft
 }
 <# /FUNCTIONS #>
 <# -------------------------- EXECUTIONS -------------------------- #>
 
+$RequiredColumnsCollection = "ServerName","ServerVersion","EASInternalURL","EASExternalURL","OABInternalURL","OABExernalURL","OWAInternalURL","OWAExernalURL","ECPInternalURL","ECPExernalURL","AutoDiscURI","EWSInternalURL","EWSExernalURL","OutlookAnywhere-InternalHostName(NoneForE2010)","OutlookAnywhere-ExternalHostNAme(E2010+)"
 
-$ServerConfig = Import-Csv $InputCSV
+# $ServerConfig = Import-Csv $InputCSV
 
+import-ValidCSV -inputFile $InputCSV -requiredColumns $RequiredColumnsCollection
 
+$ServersConfigs = import-csv $inputFile
 
+Foreach ($server in $ServersConfigs) {
+    Set-ActiveSyncVirtualDirectory -ActiveSyncServer E2016-01
+
+    Write-Host "Getting Exchange server $($_.ServerName)"
+    $CurrentServer = Get-ExchangeServer $_.ServerName
+
+    Write-Host "Setting EAS InternalURL to $($_.EASInternalURL) and EAS ExternalURL to $_.EASExternalURL"
+    $CurrentServer | Get-ActiveSyncVirtualDirectory -ADPropertiesOnly | Set-ActiveSyncVirtualDirectory -InternalURL $_.EASInternalURL -ExternalURL $_.EASExternalURL
+
+    Write-Host "Setting OAB InternalURL to $($_.OABInternalURL) and OAB ExternalURL to $_.OABExternalURL"
+    $CurrentServer | Get-OabVirtualDirectory -ADPropertiesOnly | Set-OabVirtualDirectory -InternalURL $_.OABInternalURL -ExternalUrl $_.OABExternalURL
+
+    Write-Host "Setting EWS InternalURL to $($_.EWSInternalURL) and EWS ExternalURL to $_.EWSExternalURL"
+    $CurrentServer | Get-EWSVirtualDirectory -ADPropertiesOnly | Set-EWSVirtualDirectory -InternalURL $_.EWSInternalURL -ExternalUrl $_.EWSExternalURL
+
+    Write-Host "Setting ECP InternalURL to $($_.ECPInternalURL) and ECP ExternalURL to $_.ECPExternalURL"
+    $CurrentServer | Get-ECPVirtualDirectory -ADPropertiesOnly | Set-ECPVirtualDirectory -InternalURL $_.ECPInternalURL -ExternalUrl $_.ECPExternalURL
+
+    Write-Host "Setting EWS InternalURL to $($_.EWSInternalURL) and EWS ExternalURL to $_.EWSExternalURL"
+    $CurrentServer | Get-WebServicesVirtualDirectory -ADPropertiesOnly | Set-WebServicesVirtualDirectory -InternalURL $_.EWSInternalURL -ExternalUrl $_.EWSExternalURL
+
+    Write-Host "Setting OutlookAnywhere InternalURL to $($_.OutlookAnywhereInternalURL) and OutlookAnywhere ExternalURL to $_.OutlookAnywhereExternalURL"
+    If ($CurrentServer.AdminDisplayVersion -match "15."){
+        Write-Host "Server is E2013 or E2016, setting both OA Internal and External Host"
+        $CurrentServer | Get-OutlookAnywhere -ADPropertiesOnly | Set-OutlookAnywhere -InternalHostName $_."OutlookAnywhere-InternalHostName(NoneForE2010)" -ExternalHostname $_."OutlookAnywhere-ExternalHostNAme(E2010+)"
+    } Else {
+        Write-Host "Server is E2010, setting only External Host"
+        $CurrentServer | Get-OutlookAnywhere -ADPropertiesOnly | Set-OutlookAnywhere -ExternalHostname $_."OutlookAnywhere-ExternalHostNAme(E2010+)"
+    }
+    If ($CurrentServer.AdminDisplayVersion -match "15."){
+        Set-ClientAccessService $CurrentServer -AutoDiscoverServiceInternalUri $_.AutodiscURI
+    } Else {
+        Set-ClientAccessServer $CurrentServer -AutoDiscoverServiceInternalUri $_.AutodiscURI
+    }
+
+}
 
 <# /EXECUTIONS #>
 <# -------------------------- CLEANUP VARIABLES -------------------------- #>
