@@ -166,7 +166,7 @@ If($TestCSV){
     $ServersConfigs | ft ServerName,@{Label = "Version"; Expression={"V." + $(($_.ServerVersion).Substring(8,4))}}
 }
 
-$test = ($ServersConfigs | % {$_.ServerVersion -match "15."}) -join ";"
+$test = ($ServersConfigs | % {$_.ServerVersion -match "15\."}) -join ";"
 
 If ($test -match "$true"){
     $IsThereE2013orE2016 = $True
