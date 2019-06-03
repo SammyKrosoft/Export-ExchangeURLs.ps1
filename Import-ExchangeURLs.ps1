@@ -45,7 +45,8 @@ None
 [CmdLetBinding(DefaultParameterSetName = "NormalRun")]
 Param(
     [Parameter(Mandatory = $True, Position = 1, ParameterSetName = "NormalRun")][String]$InputCSV,
-    [Parameter(Mandatory = $false, Position = 2, ParameterSetName = "CheckOnly")][switch]$CheckVersion
+    [Parameter(Mandatory = $False, Position = 2, ParameterSetName = "NormalRun")][switch]$TestCSV,
+    [Parameter(Mandatory = $false, Position = 3, ParameterSetName = "CheckOnly")][switch]$CheckVersion
 )
 
 <# ------- SCRIPT_HEADER (Only Get-Help comments and Param() above this point) ------- #>
@@ -73,8 +74,44 @@ $ScriptLog = "$ScriptPath\$($ScriptName)-$(Get-Date -Format 'dd-MMMM-yyyy-hh-mm-
 <# ---------------------------- /SCRIPT_HEADER ---------------------------- #>
 <# -------------------------- DECLARATIONS -------------------------- #>
 # $ErrorActionPreference = Continue
+$IsThereE2013orE2016 = $false
 <# /DECLARATIONS #>
 <# -------------------------- FUNCTIONS -------------------------- #>
+Function Test-ExchTools(){
+    <#
+    .SYNOPSIS
+    This small function will just check if you have Exchange tools installed or available on the
+    current PowerShell session.
+    
+    .DESCRIPTION
+    The presence of Exchange tools are checked by trying to execute "Get-ExBanner", one of the basic Exchange
+    cmdlets that runs when the Exchange Management Shell is called.
+    
+    Just use Test-ExchTools in your script to make the script exit if not launched from an Exchange
+    tools PowerShell session...
+    
+    .EXAMPLE
+    Test-ExchTools
+    => will exit the script/program si Exchange tools are not installed
+    #>
+        Try
+        {
+            #Get-command Get-ExBanner -ErrorAction Stop
+            Get-command Get-Mailbox -ErrorAction Stop
+            $ExchInstalledStatus = $true
+            $Message = "Exchange tools are present !"
+            Write-Host $Message -ForegroundColor Blue -BackgroundColor Red
+        }
+        Catch [System.SystemException]
+        {
+            $ExchInstalledStatus = $false
+            $Message = "Exchange Tools are not present ! This script/tool need these. Exiting..."
+            Write-Host $Message -ForegroundColor red -BackgroundColor Blue
+            Exit
+        }
+        Return $ExchInstalledStatus
+    }
+
 function import-ValidCSV {
     <#
     .SYNOPSIS
@@ -111,54 +148,76 @@ function import-ValidCSV {
                         exit 10
                 }
         }
-        $csvImport | ft
+        Return $csvImport
 }
 <# /FUNCTIONS #>
 <# -------------------------- EXECUTIONS -------------------------- #>
+If (!($TestCSV)){Test-ExchTools}
 
 $RequiredColumnsCollection = "ServerName","ServerVersion","EASInternalURL","EASExternalURL","OABInternalURL","OABExernalURL","OWAInternalURL","OWAExernalURL","ECPInternalURL","ECPExernalURL","AutoDiscURI","EWSInternalURL","EWSExernalURL","OutlookAnywhere-InternalHostName(NoneForE2010)","OutlookAnywhere-ExternalHostNAme(E2010+)"
 
 # $ServerConfig = Import-Csv $InputCSV
 
-import-ValidCSV -inputFile $InputCSV -requiredColumns $RequiredColumnsCollection
+$ServersConfigs = import-ValidCSV -inputFile $InputCSV -requiredColumns $RequiredColumnsCollection
+# $ServersConfigsDirectFromFile = Import-CSV $InputCSV
 
-$ServersConfigs = import-csv $inputFile
+If($TestCSV){
+    Write-Host "There are $($ServersConfigs.count) servers to parse on this CSV, here's the list:"
+    $ServersConfigs | ft ServerName,@{Label = "Version"; Expression={"V." + $(($_.ServerVersion).Substring(8,4))}}
+}
 
-Foreach ($server in $ServersConfigs) {
-    Set-ActiveSyncVirtualDirectory -ActiveSyncServer E2016-01
+$test = ($ServersConfigs | % {$_.ServerVersion -match "15."}) -join ";"
 
-    Write-Host "Getting Exchange server $($_.ServerName)"
-    $CurrentServer = Get-ExchangeServer $_.ServerName
+If ($test -match "$true"){
+    $IsThereE2013orE2016 = $True
+} Else {
+    $IsThereE2013orE2016 = $false
+}
 
-    Write-Host "Setting EAS InternalURL to $($_.EASInternalURL) and EAS ExternalURL to $_.EASExternalURL"
-    $CurrentServer | Get-ActiveSyncVirtualDirectory -ADPropertiesOnly | Set-ActiveSyncVirtualDirectory -InternalURL $_.EASInternalURL -ExternalURL $_.EASExternalURL
+If ($IsThereE2013orE2016){
+    Write-Host "There are some E2013/E2016 in the list... Make sure you run this tool from E2013/2016 EMS ! Using Get-ClientAccessServices instead of Get-ClientAccessServer" -BackgroundColor darkblue -fore red
+} Else {
+    Write-Host "No E2013/2016 in the list ... using Get-ClientAccessServer"
+}
 
-    Write-Host "Setting OAB InternalURL to $($_.OABInternalURL) and OAB ExternalURL to $_.OABExternalURL"
-    $CurrentServer | Get-OabVirtualDirectory -ADPropertiesOnly | Set-OabVirtualDirectory -InternalURL $_.OABInternalURL -ExternalUrl $_.OABExternalURL
+# $ServersConfigs = import-csv $inputFile
 
-    Write-Host "Setting EWS InternalURL to $($_.EWSInternalURL) and EWS ExternalURL to $_.EWSExternalURL"
-    $CurrentServer | Get-EWSVirtualDirectory -ADPropertiesOnly | Set-EWSVirtualDirectory -InternalURL $_.EWSInternalURL -ExternalUrl $_.EWSExternalURL
+Foreach ($CurrentServer in $ServersConfigs) {
 
-    Write-Host "Setting ECP InternalURL to $($_.ECPInternalURL) and ECP ExternalURL to $_.ECPExternalURL"
-    $CurrentServer | Get-ECPVirtualDirectory -ADPropertiesOnly | Set-ECPVirtualDirectory -InternalURL $_.ECPInternalURL -ExternalUrl $_.ECPExternalURL
+    Write-Host "Getting Exchange server $($CurrentServer.ServerName)"
+    If (!$TestCSV){$CurrentServer = Get-ExchangeServer $CurrentServer.ServerName}
 
-    Write-Host "Setting EWS InternalURL to $($_.EWSInternalURL) and EWS ExternalURL to $_.EWSExternalURL"
-    $CurrentServer | Get-WebServicesVirtualDirectory -ADPropertiesOnly | Set-WebServicesVirtualDirectory -InternalURL $_.EWSInternalURL -ExternalUrl $_.EWSExternalURL
+    Write-Host "Setting EAS InternalURL to $($CurrentServer.EASInternalURL) and EAS ExternalURL to $($CurrentServer.EASExternalURL)"
+    If (!$TestCSV){$CurrentServer | Get-ActiveSyncVirtualDirectory -ADPropertiesOnly | Set-ActiveSyncVirtualDirectory -InternalURL $CurrentServer.EASInternalURL -ExternalURL $CurrentServer.EASExternalURL}
 
-    Write-Host "Setting OutlookAnywhere InternalURL to $($_.OutlookAnywhereInternalURL) and OutlookAnywhere ExternalURL to $_.OutlookAnywhereExternalURL"
+    Write-Host "Setting OAB InternalURL to $($CurrentServer.OABInternalURL) and OAB ExternalURL to $($CurrentServer.OABExternalURL)"
+    If (!$TestCSV){$CurrentServer | Get-OabVirtualDirectory -ADPropertiesOnly | Set-OabVirtualDirectory -InternalURL $CurrentServer.OABInternalURL -ExternalUrl $CurrentServer.OABExternalURL}
+
+    Write-Host "Setting EWS InternalURL to $($CurrentServer.EWSInternalURL) and EWS ExternalURL to $($CurrentServer.EWSExternalURL)"
+    If (!$TestCSV){$CurrentServer | Get-EWSVirtualDirectory -ADPropertiesOnly | Set-EWSVirtualDirectory -InternalURL $CurrentServer.EWSInternalURL -ExternalUrl $CurrentServer.EWSExternalURL}
+
+    Write-Host "Setting ECP InternalURL to $($CurrentServer.ECPInternalURL) and ECP ExternalURL to $($CurrentServer.ECPExternalURL)"
+    If (!$TestCSV){$CurrentServer | Get-ECPVirtualDirectory -ADPropertiesOnly | Set-ECPVirtualDirectory -InternalURL $CurrentServer.ECPInternalURL -ExternalUrl $CurrentServer.ECPExternalURL}
+
+    Write-Host "Setting EWS InternalURL to $($CurrentServer.EWSInternalURL) and EWS ExternalURL to $($CurrentServer.EWSExternalURL)"
+    If (!$TestCSV){$CurrentServer | Get-WebServicesVirtualDirectory -ADPropertiesOnly | Set-WebServicesVirtualDirectory -InternalURL $CurrentServer.EWSInternalURL -ExternalUrl $CurrentServer.EWSExternalURL}
+
+    Write-Host "Setting OutlookAnywhere InternalURL to $($CurrentServer.OutlookAnywhereInternalURL) and OutlookAnywhere ExternalURL to $($CurrentServer.OutlookAnywhereExternalURL)"
     If ($CurrentServer.AdminDisplayVersion -match "15."){
         Write-Host "Server is E2013 or E2016, setting both OA Internal and External Host"
-        $CurrentServer | Get-OutlookAnywhere -ADPropertiesOnly | Set-OutlookAnywhere -InternalHostName $_."OutlookAnywhere-InternalHostName(NoneForE2010)" -ExternalHostname $_."OutlookAnywhere-ExternalHostNAme(E2010+)"
+        If (!$TestCSV){$CurrentServer | Get-OutlookAnywhere -ADPropertiesOnly | Set-OutlookAnywhere -InternalHostName $CurrentServer."OutlookAnywhere-InternalHostName(NoneForE2010)" -ExternalHostname $CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)"}
     } Else {
         Write-Host "Server is E2010, setting only External Host"
-        $CurrentServer | Get-OutlookAnywhere -ADPropertiesOnly | Set-OutlookAnywhere -ExternalHostname $_."OutlookAnywhere-ExternalHostNAme(E2010+)"
+        If (!$TestCSV){$CurrentServer | Get-OutlookAnywhere -ADPropertiesOnly | Set-OutlookAnywhere -ExternalHostname $CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)"}
     }
-    If ($CurrentServer.AdminDisplayVersion -match "15."){
-        Set-ClientAccessService $CurrentServer -AutoDiscoverServiceInternalUri $_.AutodiscURI
+    Write-Host "Setting Autodiscover URI (SCP) to $($CurrentServer.AutodiscURI)"
+    If ($IsThereE2013orE2016){
+        Write-Host "Using Get-ClientAccessService (assuming you run the script from an E2013/2016 EMS)" -ForegroundColor Yellow
+        If (!$TestCSV){Set-ClientAccessService $CurrentServer -AutoDiscoverServiceInternalUri $CurrentServer.AutodiscURI}
     } Else {
-        Set-ClientAccessServer $CurrentServer -AutoDiscoverServiceInternalUri $_.AutodiscURI
+        Write-Host "Using Get-ClientAccessServer (assuming you run the script from an 2010 EMS)" -ForegroundColor Yellow
+        If (!$TestCSV){Set-ClientAccessServer $CurrentServer -AutoDiscoverServiceInternalUri $CurrentServer.AutodiscURI}
     }
-
 }
 
 <# /EXECUTIONS #>
