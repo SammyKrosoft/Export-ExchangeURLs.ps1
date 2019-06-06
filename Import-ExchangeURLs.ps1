@@ -188,7 +188,8 @@ Foreach ($CurrentServer in $ServersConfigs) {
     If (!$TestCSV){$CurrentServer = Get-ExchangeServer $CurrentServer.ServerName}
 
     Write-Host "Setting EAS InternalURL to $($CurrentServer.EASInternalURL) and EAS ExternalURL to $($CurrentServer.EASExternalURL)"
-    If (!$TestCSV){$CurrentServer | Get-ActiveSyncVirtualDirectory -ADPropertiesOnly | Set-ActiveSyncVirtualDirectory -InternalURL $CurrentServer.EASInternalURL -ExternalURL $CurrentServer.EASExternalURL}
+    If (!$TestCSV){
+        $CurrentServer | Get-ActiveSyncVirtualDirectory -ADPropertiesOnly | Set-ActiveSyncVirtualDirectory -InternalURL {if ($CurrentServer.EASInternalURL -eq $null) {$null} Else {$CurrentServer.EASInternalURL}} -ExternalURL {if ($CurrentServer.EASExternalURL -eq $null){$null}Else{$CurrentServer.EASExternalURL}}
 
     Write-Host "Setting OAB InternalURL to $($CurrentServer.OABInternalURL) and OAB ExternalURL to $($CurrentServer.OABExternalURL)"
     If (!$TestCSV){$CurrentServer | Get-OabVirtualDirectory -ADPropertiesOnly | Set-OabVirtualDirectory -InternalURL $CurrentServer.OABInternalURL -ExternalUrl $CurrentServer.OABExternalURL}
