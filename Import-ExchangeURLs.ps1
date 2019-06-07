@@ -46,7 +46,8 @@ None
 Param(
     [Parameter(Mandatory = $True, Position = 1, ParameterSetName = "NormalRun")][String]$InputCSV,
     [Parameter(Mandatory = $False, Position = 2, ParameterSetName = "NormalRun")][switch]$TestCSV,
-    [Parameter(Mandatory = $false, Position = 3, ParameterSetName = "CheckOnly")][switch]$CheckVersion
+    [Parameter(Mandatory = $False, Position = 3, ParameterSetName = "NormalRun")][switch]$DebugVerbose,
+    [Parameter(Mandatory = $false, Position = 4, ParameterSetName = "CheckOnly")][switch]$CheckVersion
 )
 
 <# ------- SCRIPT_HEADER (Only Get-Help comments and Param() above this point) ------- #>
@@ -77,6 +78,63 @@ $ScriptLog = "$ScriptPath\$($ScriptName)-$(Get-Date -Format 'dd-MMMM-yyyy-hh-mm-
 $IsThereE2013orE2016 = $false
 <# /DECLARATIONS #>
 <# -------------------------- FUNCTIONS -------------------------- #>
+function IsNotEmpty($Param){
+    If ($Param -ne "" -and $Param -ne $Null -and $Param -ne 0) {
+        Return $True
+    } Else {
+        Return $False
+    }
+}
+Function Title1 ($title, $TotalLength = 100, $Back = "Yellow", $Fore = "Black") {
+    $TitleLength = $Title.Length
+    [string]$StarsBeforeAndAfter = ""
+    $RemainingLength = $TotalLength - $TitleLength
+    If ($($RemainingLength % 2) -ne 0) {
+        $Title = $Title + " "
+    }
+    $Counter = 0
+    For ($i=1;$i -le $(($RemainingLength)/2);$i++) {
+        $StarsBeforeAndAfter += "*"
+        $counter++
+    }
+    
+    $Title = $StarsBeforeAndAfter + $Title + $StarsBeforeAndAfter
+    Write-host
+    Write-Host $Title -BackgroundColor $Back -foregroundcolor $Fore
+    Write-Host
+    
+}
+Function LogMag ($Message){
+    Write-Host $message -ForegroundColor Magenta
+}
+
+Function LogGreen ($message){
+    Write-Host $message -ForegroundColor Green
+}
+
+Function LogYellow ($message){
+    Write-Host $message -ForegroundColor Yellow
+}
+
+Function LogBlue ($message){
+    Write-Host $message -ForegroundColor Blue
+}
+
+#Examples
+# cls
+
+# Title1 "Part 1 - Checking mailboxes"
+
+# For ($i=0;$i -le 10;$i++){
+#     LogGreen "Mailbox $i - ok"
+# }
+
+# Title1 "Part 2 - Checking databases"
+
+# For ($i=0;$i -le 5;$i++){
+#     LogGreen "Database $i - ok"
+# }
+
 Function Test-ExchTools(){
     <#
     .SYNOPSIS
@@ -187,7 +245,7 @@ If ($IsThereE2013orE2016){
 
 Foreach ($CurrentServer in $ServersConfigs) {
 
-    Write-Host "Getting Exchange server $($CurrentServer.ServerName)"
+    Title1 "Getting Exchange server $($CurrentServer.ServerName)"
     # If we don't just test the script, we query the Server Object in another variable. It's only to test if the server is reachable
     # If server is not joigneable, we stop the script. If -TestCSV switch enabled, we don't test the server reachability, and we keep just 
     # the name string to build the command line...
@@ -203,16 +261,43 @@ Foreach ($CurrentServer in $ServersConfigs) {
         
     # Exchange ActiveSync aka EAS
     $StatusMsg = "Setting EAS InternalURL to $($CurrentServer.EASInternalURL) and EAS ExternalURL to $($CurrentServer.EASExternalURL)"
-    Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
+    # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
+    LogMag $StatusMsg
     $EAScmd = "$($CurrentServer.ServerName) | Get-ActiveSyncVirtualDirectory -ADPropertiesOnly | Set-ActiveSyncVirtualDirectory"
-    If ($CurrentServer.EASInternalURL -ne $null){
+    #region #### VALUE TEST ROUTINE FOR DEBUG ######
+    If ($DebugVerbose){
+        LogGreen "Status of EAS InternalURL: "
+        LogGreen "Value: $($CurrentServer.EASInternalURL)"
+        LogGreen "Is it blank ?"
+        LogGreen "$($CurrentServer.EASInternalURL -eq """")"
+        LogGreen "Is it `$null ?"
+        LogGreen "$($CurrentServer.EASInternalURL -eq $null)"
+    }
+    #endregion #### END OF TEST ROUTING FOR DEBUG ######
+    If (IsNotEmpty $CurrentServer.EASInternalURL){
+        LogMag "EAS InternalURL is NOT null and is equal to $($CurrentServer.EASInternalURL)"
+        LogMag "Length of characters : $($CurrentServer.EASInternalURL.Length)"
         $EAScmd += " -InternalURL $($CurrentServer.EASInternalURL)"
     } Else {
         $EAScmd += " -InternalURL `$null"
     }
-    If ($CurrentServer.EASExternalURL -ne $null){
+    #region #### VALUE TEST ROUTINE FOR DEBUG ######
+    If ($DebugVerbose){
+        LogGreen "Status of EAS ExternalURL: "
+        LogGreen "Value: $($CurrentServer.EASExternalURL)"
+        LogGreen "Is it blank ?"
+        LogGreen "$($CurrentServer.EASExternalURL -eq """")"
+        LogGreen "Is it `$null ?"
+        LogGreen "$($CurrentServer.EASExternalURL -eq $null)"
+    }
+    #endregion #### END OF TEST ROUTING FOR DEBUG ######
+    If (IsNotEmpty $CurrentServer.EASexternalURL){
+        LogMag "EAS ExternalURL is NOT null and is equal to $($CurrentServer.EASExternalURL)"
+        LogMag "Length of characters : $($CurrentServer.EASExternalURL.Length)"
         $EAScmd += " -ExternalURL $($CurrentServer.EASExternalURL)"
     } Else {
+        LogMag "EAS ExternalURL is null and is equal to $($CurrentServer.EASExternalURL)"
+        LogMag "Length of characters : $($CurrentServer.EASExternalURL.Length)"
         $EAScmd += " -ExternalURL `$null"
     }
     # If we have the -TestCSV switch enabled, we just print the generated command line. Otherwise, we run it using Invoke-Expression...
@@ -224,15 +309,37 @@ Foreach ($CurrentServer in $ServersConfigs) {
 
     # Exchange OfflineAddressBook 
     $StatusMsg = "Setting OAB InternalURL to $($CurrentServer.OABInternalURL) and OAB ExternalURL to $($CurrentServer.OABExternalURL)"
-    Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
+    # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
+    LogMag $StatusMsg
     # $($CurrentServer.ServerName) | Get-OabVirtualDirectory -ADPropertiesOnly | Set-OabVirtualDirectory -InternalURL $CurrentServer.OABInternalURL -ExternalUrl $CurrentServer.OABExternalURL
     $OABCmd = "$($CurrentServer.ServerName) | Get-OabVirtualDirectory -ADPropertiesOnly | Set-OabVirtualDirectory"
-    If ($CurrentServer.OABInternalURL -eq $null) {
+    #region #### VALUE TEST ROUTINE FOR DEBUG ######
+    If ($DebugVerbose){
+        LogGreen "Status of OAB InternalURL: "
+        LogGreen "Value: $($CurrentServer.OABInternalURL)"
+        LogGreen "Is it blank ?"
+        LogGreen "$($CurrentServer.OABInternalURL -eq """")"
+        LogGreen "Is it `$null ?"
+        LogGreen "$($CurrentServer.OABInternalURL -eq $null)"
+    }
+    #endregion #### END OF TEST ROUTING FOR DEBUG ######
+    If ($CurrentServer.OABInternalURL -ne $null) {
         $OABcmd += " -InternalURL $($CurrentServer.OABInternalURL)"
     } Else {
+        LogMag "OAB Internal URL is NULL and equal to $($CurrentServer.OABInternalURL)"
         $OABcmd += " -InternalURL `$null"
     }
-    If ($CurrentServer.OABExternalURL -eq $null) {
+    #region #### VALUE TEST ROUTINE FOR DEBUG ######
+    If ($DebugVerbose){
+        LogGreen "Status of OAB ExternalURL: "
+        LogGreen "Value: $($CurrentServer.OABExternalURL)"
+        LogGreen "Is it blank ?"
+        LogGreen "$($CurrentServer.OABExternalURL -eq """")"
+        LogGreen "Is it `$null ?"
+        LogGreen "$($CurrentServer.OABExternalURL -eq $null)"
+    }
+    #endregion #### END OF TEST ROUTING FOR DEBUG ######
+    If ($CurrentServer.OABExternalURL -ne $null) {
         $OABcmd += " -ExternalURL $($CurrentServer.OABExternalURL)"
     } Else {
         $OABcmd += " -ExternalURL `$null"
@@ -246,13 +353,34 @@ Foreach ($CurrentServer in $ServersConfigs) {
 
     # Outlook Web Access aka OWA
     $StatusMsg = "Setting OWA InternalURL to $($CurrentServer.OWAInternalURL) and OWA ExternalURL to $($CurrentServer.OWAExternalURL)"
-    Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
+    # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
+    LogMag $StatusMsg
     $OWAcmd = "$($CurrentServer.ServerName) | Get-OWAVirtualDirectory -ADPropertiesOnly | Set-OWAVirtualDirectory"
+    #region #### VALUE TEST ROUTINE FOR DEBUG ######
+    If ($DebugVerbose){
+        LogGreen "Status of OWA InternalURL: "
+        LogGreen "Value: $($CurrentServer.OWAInternalURL)"
+        LogGreen "Is it blank ?"
+        LogGreen "$($CurrentServer.OWAInternalURL -eq """")"
+        LogGreen "Is it `$null ?"
+        LogGreen "$($CurrentServer.OWAInternalURL -eq $null)"
+    }
+    #endregion #### END OF TEST ROUTING FOR DEBUG ######
     If ($CurrentServer.OWAInternalURL -ne $null){
         $OWAcmd += " -InternalURL $($CurrentServer.OWAInternalURL)"
     } Else {
         $OWAcmd += " -InternalURL `$null"
     }
+        #region #### VALUE TEST ROUTINE FOR DEBUG ######
+        If ($DebugVerbose){
+            LogGreen "Status of OWA InternalURL: "
+            LogGreen "Value: $($CurrentServer.OWAInternalURL)"
+            LogGreen "Is it blank ?"
+            LogGreen "$($CurrentServer.OWAInternalURL -eq """")"
+            LogGreen "Is it `$null ?"
+            LogGreen "$($CurrentServer.OWAInternalURL -eq $null)"
+        }
+        #endregion #### END OF TEST ROUTING FOR DEBUG ######
     If ($CurrentServer.OWAExternalURL -ne $null){
         $OWAcmd += " -ExternalURL $($CurrentServer.OWAExternalURL)"
     } Else {
@@ -267,7 +395,8 @@ Foreach ($CurrentServer in $ServersConfigs) {
 
     # Outlook Web Access aka ECP
     $StatusMsg = "Setting ECP InternalURL to $($CurrentServer.ECPInternalURL) and ECP ExternalURL to $($CurrentServer.ECPExternalURL)"
-    Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
+    # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
+    LogMag $StatusMsg
     $ECPcmd = "$($CurrentServer.ServerName) | Get-ECPVirtualDirectory -ADPropertiesOnly | Set-ECPVirtualDirectory"
     If ($CurrentServer.ECPInternalURL -ne $null){
         $ECPcmd += " -InternalURL $($CurrentServer.ECPInternalURL)"
@@ -288,15 +417,16 @@ Foreach ($CurrentServer in $ServersConfigs) {
 
     # Exchange Exchange Web Services
     $StatusMsg = "Setting EWS InternalURL to $($CurrentServer.EWSInternalURL) and EWS ExternalURL to $($CurrentServer.EWSExternalURL)"
-    Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
+    # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
+    LogMag $StatusMsg
     #$($CurrentServer.ServerName) | Get-WebServicesVirtualDirectory -ADPropertiesOnly | Set-WebServicesVirtualDirectory -InternalURL $CurrentServer.EWSInternalURL -ExternalUrl $CurrentServer.EWSExternalURL
     $EWSCmd = "$($CurrentServer.ServerName) | Get-WebServicesVirtualDirectory -ADPropertiesOnly | Set-WebServicesVirtualDirectory"
-    If ($CurrentServer.EWSInternalURL -eq $null) {
+    If ($CurrentServer.EWSInternalURL -ne $null) {
         $EWScmd += " -InternalURL $($CurrentServer.EWSInternalURL)"
     } Else {
         $EWScmd += " -InternalURL `$null"
     }
-    If ($CurrentServer.EWSExternalURL -eq $null) {
+    If ($CurrentServer.EWSExternalURL -ne $null) {
         $EWScmd += " -ExternalURL $($CurrentServer.EWSExternalURL)"
     } Else {
         $EWScmd += " -ExternalURL `$null"
@@ -310,7 +440,8 @@ Foreach ($CurrentServer in $ServersConfigs) {
 
     # Outlook Anywhere aka OA
     $StatusMsg = "Setting OutlookAnywhere InternalURL to $($CurrentServer."OutlookAnywhere-InternalHostName(NoneForE2010)") and OutlookAnywhere ExternalURL to $($CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)")"
-    Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
+    # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
+    LogMag $StatusMsg
     $OAcmd = "$($CurrentServer.ServerName) | Get-OutlookAnywhere -ADPropertiesOnly | Set-OutlookAnywhere"
     If ($CurrentServer.ServerVersion -match "15\."){
         If ($CurrentServer."OutlookAnywhere-InternalHostName(NoneForE2010)" -ne $null){
@@ -319,7 +450,7 @@ Foreach ($CurrentServer in $ServersConfigs) {
             $OAcmd += " -InternalHostName `$null"
         }
     }
-    If ($CurrentServer.OAExternalURL -ne $null){
+    If ($CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)" -ne $null){
         $OAcmd += " -ExternalHostName $($CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)")"
     } Else {
         $OAcmd += " -ExternalHostName `$null"
@@ -333,18 +464,20 @@ Foreach ($CurrentServer in $ServersConfigs) {
 
     # Autodiscover
     $StatusMsg = "Setting Autodiscover URI (SCP) to $($CurrentServer.AutodiscURI)"
-    Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
+    # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
+    LogMag $StatusMsg
     If ($IsThereE2013orE2016){
-        Write-Host "Using Get-ClientAccessService (assuming you run the script from an E2013/2016 EMS)" -ForegroundColor Yellow
+        LogGreen "Using Get-ClientAccessService (assuming you run the script from an E2013/2016 EMS)"
         $SCPcmd = "Set-ClientAccessService $($CurrentServer.ServerName) -AutoDiscoverServiceInternalUri $($CurrentServer.AutodiscURI)"
     } Else {
-        Write-Host "Using Get-ClientAccessServer (assuming you run the script from an 2010 EMS)" -ForegroundColor Yellow
+        LogGreen "Using Get-ClientAccessServer (assuming you run the script from an 2010 EMS)" -ForegroundColor Yellow
         $SCPcmd = "Set-ClientAccessServer $($CurrentServer.ServerName) -AutoDiscoverServiceInternalUri $($CurrentServer.AutodiscURI)"
     }
     If (!$TestCSV){
         Invoke-Expression $SCPcmd
     } Else {
         Write-Host $SCPcmd -BackgroundColor blue -ForegroundColor Yellow
+        
     }
 }
 
