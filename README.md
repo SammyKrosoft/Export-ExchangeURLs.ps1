@@ -13,7 +13,7 @@ Use ```Get-Help .\Import-ExchangeURLs.ps1 -Examples``` to get the script's full 
 I'm dumping temporarily the Import-ExchangeURLs.ps1 script help here for quick reference:
 ```
 NAME
-    C:\Users\SammyKrosoft\documents\GitHubSeparateScripts\Export-ExchangeURLs.ps1\Import-ExchangeURLs.ps1
+    .\Import-ExchangeURLs.ps1
 
 SYNOPSIS
     This script will help you set up your Exchange Virtual Directories, including AutoDiscoverfrom a CSV file
@@ -22,10 +22,10 @@ SYNOPSIS
 
 
 SYNTAX
-    C:\Users\SammyKrosoft\documents\GitHubSeparateScripts\Export-ExchangeURLs.ps1\Import-ExchangeURLs.ps1 [-InputCSV] <String> [[-TestCSV]] [[-DebugVerbose]]
+    .\Import-ExchangeURLs.ps1 [-InputCSV] <String> [[-TestCSV]] [[-DebugVerbose]]
     [<CommonParameters>]
 
-    C:\Users\SammyKrosoft\documents\GitHubSeparateScripts\Export-ExchangeURLs.ps1\Import-ExchangeURLs.ps1 [[-CheckVersion]] [<CommonParameters>]
+    .\Import-ExchangeURLs.ps1 [[-CheckVersion]] [<CommonParameters>]
 
 
 DESCRIPTION
