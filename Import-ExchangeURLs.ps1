@@ -1,40 +1,81 @@
 <#
 .SYNOPSIS
-    This script imports a specially formatted CSV into server's configuration
+    This script will help you set up your Exchange Virtual Directories, including AutoDiscoverfrom a CSV file
+    it takes in Input. This CSV file can contain one or as many servers as you need to configure the 
+    Virtual Directories for.
 
 .DESCRIPTION
-    The CSV file to import must have the following headers:
-    ServerName,"ServerVersion","EASInternalURL","EASExternalURL","OABInternalURL",
-    "OABExernalURL","OWAInternalURL","OWAExernalURL","ECPInternalURL","ECPExernalURL",
-    "AutoDiscName","AutoDiscURI","EWSInternalURL","EWSExernalURL","OutlookAnywhere-InternalHostName(NoneForE2010)",
-    "OutlookAnywhere-ExternalHostNAme(E2010+)"
-        NOTE: the ServerVersion is optional
-        NOTE2: a blank value will set the corresponding attribute to $null
+    This script takes in input a CSV file issued form an Export-ExchangeURLsv3.ps1 script or a
+    CSV file containing the following headers:
+    
+    ServerName,ServerVersion,EASInternalURL,EASExternalURL,OABInternalURL,OABExernalURL,
+    OWAInternalURL,OWAExernalURL,ECPInternalURL,ECPExernalURL,AutoDiscName,AutoDiscURI,
+    EWSInternalURL,EWSExernalURL,OutlookAnywhere-InternalHostName(NoneForE2010),
+    OutlookAnywhere-ExternalHostNAme(E2010+)
+    
+    IMPORTANT NOTE: a blank value will set the corresponding attribute to $null
 
-.PARAMETER InputVSB
+    IMPORTANT ADVICE: Always use Export-ExchangeURLsv3.ps1 to export all your current URLs before any
+    modifications => that way you'll just have to use that export with this script to set
+    the Virtual Directories and/or Autodiscover value(s) to what they were initially.
+
+.PARAMETER InputCSV
     Specifies the CSV to input (will be validated in the script)
+
+.PARAMETER TestCSV 
+    This switch will just get all the values in the CSV file specified in the InputCSV property, and 
+    print on screen all the actions that the script will perform without the -TestCSV switch.
+
+.PARAMETER DebugVerbose
+    This swich Will enable output of additional details regarding the attributes values and test whether
+    it's set to $null or empty string ""
 
 .PARAMETER CheckVersion
     This parameter will just dump the script current version.
 
 .INPUTS
-    CSV file
+    CSV file containing the above mentionned headers.
 
 .OUTPUTS
-    Set Exchange servers value - will warn if specified server in the CSV doesn't exist
+    Set Exchange servers value - the script will stop if specified server in the CSV doesn't exist
 
 .EXAMPLE
-.\Do-Something.ps1
-This will launch the script and do someting
-
-.EXAMPLE
-.\Do-Something.ps1 -CheckVersion
+.\Import-ExchangeURLs.ps1 -CheckVersion
 This will dump the script name and current version like :
-SCRIPT NAME : Do-Something.ps1
+SCRIPT NAME : Import-ExchangeURLs.ps1
 VERSION : v1.0
 
+.EXAMPLE
+.\Import-ExchangeURLs.ps1 -InputCSV .\ServersConfig.csv -TestCSV
+This will launch the script and print only without executing the PowerShell command lines it will execute to update
+the Exchange Virtual Directories according to the information provided in the ServersConfig.csv file
+specified on the -InputCSV parameter.
+
+.EXAMPLE
+.\Import-ExchangeURLs.ps1 -InputCSV .\ServersConfig.csv -DebugVerbose -TestCSV
+This will launch the script and print only without executing the PowerShell command lines it will execute to update
+the Exchange Virtual Directories according to the information provided in the ServersConfig.csv file
+specified on the -InputCSV parameter, as well as output additional details about he actions, comparisons, and some other stuff the script does...
+
+.EXAMPLE
+.\Import-ExchangeURLs.ps1 -InputCSV .\ServersConfig.csv
+This will set all Exchange Virtual Directories (OAB, EWS, OWA, ECP, ...) including Autodiscover SCP 
+with the URLs present in the CSV file. If a value is blank for a Virtual Directory property, the script
+will set it to a $null aka blank value.
+
+.EXAMPLE
+.\Import-ExchangeURLs.ps1 -InputCSV .\ServersConfig.csv -DebugVerbose
+This will launch the script, set the Virtual Directories values according to the specified CSV, and
+output additional details about the actions, comparisons, and some other stuff the script does...
+
 .NOTES
-None
+Again, it's strongly recommended to:
+#1 - Export your current URLs and Autodiscover settings using the Export-ExchangeURLsv3.ps1 script to be able to easily roll back
+if need be, and keep the original CSV export. Create a copy of that exported CSV that we will modify and use that modified copy
+with the script to set the Exchange vDir properties.
+#2 - Always run the Import-ExchangeURLs.ps1 script with the -TestCSV first, and review all the command lines that the script will
+execute
+#3 - the -DebugVerbose switch is not mandatory, it's mostly for debug purposes if the script crashes or doesn't behave as intended
 
 .LINK
     https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help?view=powershell-6
@@ -59,10 +100,11 @@ $DebugPreference = "Stop"
 # Set Error Action to your needs
 $ErrorActionPreference = "Stop"
 #Script Version
-$ScriptVersion = "0.1"
+$ScriptVersion = "1"
 <# Version changes
 v0.1 : first script version
-v0.1 -> v0.5 : 
+v0.1 -> v1 : finalized version. To be fixed next : output text when setting a property to "$null". This is cosmetic minor change
+that does not impact the script purpose and actions.
 #>
 $ScriptName = $MyInvocation.MyCommand.Name
 If ($CheckVersion) {Write-Host "SCRIPT NAME     : $ScriptName `nSCRIPT VERSION  : $ScriptVersion";exit}
