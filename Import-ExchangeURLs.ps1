@@ -279,20 +279,24 @@ Foreach ($CurrentServer in $ServersConfigs) {
     }
     #endregion #### END OF TEST ROUTING FOR DEBUG ######
     If (IsNotEmpty $CurrentServer.EASInternalURL){
-        LogMag "EAS InternalURL is NOT null and is equal to $($CurrentServer.EASInternalURL)"
-        LogMag "Length of characters : $($CurrentServer.EASInternalURL.Length)"
+        If ($DebugVerbose){
+            LogMag "EAS InternalURL is NOT null and is equal to $($CurrentServer.EASInternalURL)"
+            LogMag "Length of characters : $($CurrentServer.EASInternalURL.Length)"
+        }
         $EAScmd += " -InternalURL $($CurrentServer.EASInternalURL)"
     } Else {
         $EAScmd += " -InternalURL `$null"
     }
     #region #### VALUE TEST ROUTINE FOR DEBUG ######
     If ($DebugVerbose){
-        LogGreen "Status of EAS ExternalURL: "
-        LogGreen "Value: $($CurrentServer.EASExternalURL)"
-        LogGreen "Is it blank ?"
-        LogGreen "$($CurrentServer.EASExternalURL -eq """")"
-        LogGreen "Is it `$null ?"
-        LogGreen "$($CurrentServer.EASExternalURL -eq $null)"
+        If ($DebugVerbose){
+            LogGreen "Status of EAS ExternalURL: "
+            LogGreen "Value: $($CurrentServer.EASExternalURL)"
+            LogGreen "Is it blank ?"
+            LogGreen "$($CurrentServer.EASExternalURL -eq """")"
+            LogGreen "Is it `$null ?"
+            LogGreen "$($CurrentServer.EASExternalURL -eq $null)"
+        }
     }
     #endregion #### END OF TEST ROUTING FOR DEBUG ######
     If (IsNotEmpty $CurrentServer.EASexternalURL){
