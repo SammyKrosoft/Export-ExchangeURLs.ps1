@@ -159,12 +159,15 @@ $RequiredColumnsCollection = "ServerName","ServerVersion","EASInternalURL","EASE
 # $ServerConfig = Import-Csv $InputCSV
 
 $ServersConfigs = import-ValidCSV -inputFile $InputCSV -requiredColumns $RequiredColumnsCollection
-# $ServersConfigsDirectFromFile = Import-CSV $InputCSV
+#Trimming all values to ensure no leading or trailing spaces
+$ServersConfigs | ForEach-Object {$_.PSObject.Properties | ForEach-Object {$_.Value = $_.Value.Trim()}}
 
 If($TestCSV){
     Write-Host "There are $($ServersConfigs.count) servers to parse on this CSV, here's the list:"
     $ServersConfigs | ft ServerName,@{Label = "Version"; Expression={"V." + $(($_.ServerVersion).Substring(8,4))}}
 }
+#BOOKMARK
+# exit
 
 $test = ($ServersConfigs | % {$_.ServerVersion -match "15\."}) -join ";"
 
@@ -185,39 +188,163 @@ If ($IsThereE2013orE2016){
 Foreach ($CurrentServer in $ServersConfigs) {
 
     Write-Host "Getting Exchange server $($CurrentServer.ServerName)"
-    If (!$TestCSV){$CurrentServer = Get-ExchangeServer $CurrentServer.ServerName}
-
-    Write-Host "Setting EAS InternalURL to $($CurrentServer.EASInternalURL) and EAS ExternalURL to $($CurrentServer.EASExternalURL)"
+    # If we don't just test the script, we query the Server Object in another variable. It's only to test if the server is reachable
+    # If server is not joigneable, we stop the script. If -TestCSV switch enabled, we don't test the server reachability, and we keep just 
+    # the name string to build the command line...
     If (!$TestCSV){
-        $CurrentServer | Get-ActiveSyncVirtualDirectory -ADPropertiesOnly | Set-ActiveSyncVirtualDirectory -InternalURL {if ($CurrentServer.EASInternalURL -eq $null) {$null} Else {$CurrentServer.EASInternalURL}} -ExternalURL {if ($CurrentServer.EASExternalURL -eq $null){$null}Else{$CurrentServer.EASExternalURL}}
-
-    Write-Host "Setting OAB InternalURL to $($CurrentServer.OABInternalURL) and OAB ExternalURL to $($CurrentServer.OABExternalURL)"
-    If (!$TestCSV){$CurrentServer | Get-OabVirtualDirectory -ADPropertiesOnly | Set-OabVirtualDirectory -InternalURL $CurrentServer.OABInternalURL -ExternalUrl $CurrentServer.OABExternalURL}
-
-    Write-Host "Setting EWS InternalURL to $($CurrentServer.EWSInternalURL) and EWS ExternalURL to $($CurrentServer.EWSExternalURL)"
-    If (!$TestCSV){$CurrentServer | Get-EWSVirtualDirectory -ADPropertiesOnly | Set-EWSVirtualDirectory -InternalURL $CurrentServer.EWSInternalURL -ExternalUrl $CurrentServer.EWSExternalURL}
-
-    Write-Host "Setting ECP InternalURL to $($CurrentServer.ECPInternalURL) and ECP ExternalURL to $($CurrentServer.ECPExternalURL)"
-    If (!$TestCSV){$CurrentServer | Get-ECPVirtualDirectory -ADPropertiesOnly | Set-ECPVirtualDirectory -InternalURL $CurrentServer.ECPInternalURL -ExternalUrl $CurrentServer.ECPExternalURL}
-
-    Write-Host "Setting EWS InternalURL to $($CurrentServer.EWSInternalURL) and EWS ExternalURL to $($CurrentServer.EWSExternalURL)"
-    If (!$TestCSV){$CurrentServer | Get-WebServicesVirtualDirectory -ADPropertiesOnly | Set-WebServicesVirtualDirectory -InternalURL $CurrentServer.EWSInternalURL -ExternalUrl $CurrentServer.EWSExternalURL}
-
-    Write-Host "Setting OutlookAnywhere InternalURL to $($CurrentServer.OutlookAnywhereInternalURL) and OutlookAnywhere ExternalURL to $($CurrentServer.OutlookAnywhereExternalURL)"
-    If ($CurrentServer.AdminDisplayVersion -match "15."){
-        Write-Host "Server is E2013 or E2016, setting both OA Internal and External Host"
-        If (!$TestCSV){$CurrentServer | Get-OutlookAnywhere -ADPropertiesOnly | Set-OutlookAnywhere -InternalHostName $CurrentServer."OutlookAnywhere-InternalHostName(NoneForE2010)" -ExternalHostname $CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)"}
-    } Else {
-        Write-Host "Server is E2010, setting only External Host"
-        If (!$TestCSV){$CurrentServer | Get-OutlookAnywhere -ADPropertiesOnly | Set-OutlookAnywhere -ExternalHostname $CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)"}
+        Try {
+            Get-ExchangeServer $CurrentServer.ServerName -ErrorAction Stop
+        }
+        Catch{
+            Write-Host "Server does not exist - please recheck your server names in your CSV, and remove the unexisting server names..."
+            Exit
+        }
     }
-    Write-Host "Setting Autodiscover URI (SCP) to $($CurrentServer.AutodiscURI)"
+        
+    # Exchange ActiveSync aka EAS
+    $StatusMsg = "Setting EAS InternalURL to $($CurrentServer.EASInternalURL) and EAS ExternalURL to $($CurrentServer.EASExternalURL)"
+    Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
+    $EAScmd = "$($CurrentServer.ServerName) | Get-ActiveSyncVirtualDirectory -ADPropertiesOnly | Set-ActiveSyncVirtualDirectory"
+    If ($CurrentServer.EASInternalURL -ne $null){
+        $EAScmd += " -InternalURL $($CurrentServer.EASInternalURL)"
+    } Else {
+        $EAScmd += " -InternalURL `$null"
+    }
+    If ($CurrentServer.EASExternalURL -ne $null){
+        $EAScmd += " -ExternalURL $($CurrentServer.EASExternalURL)"
+    } Else {
+        $EAScmd += " -ExternalURL `$null"
+    }
+    # If we have the -TestCSV switch enabled, we just print the generated command line. Otherwise, we run it using Invoke-Expression...
+    If (!$TestCSV){
+        Invoke-Expression $EAScmd
+    } Else {
+        Write-Host $EAScmd -BackgroundColor blue -ForegroundColor Yellow
+    }
+
+    # Exchange OfflineAddressBook 
+    $StatusMsg = "Setting OAB InternalURL to $($CurrentServer.OABInternalURL) and OAB ExternalURL to $($CurrentServer.OABExternalURL)"
+    Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
+    # $($CurrentServer.ServerName) | Get-OabVirtualDirectory -ADPropertiesOnly | Set-OabVirtualDirectory -InternalURL $CurrentServer.OABInternalURL -ExternalUrl $CurrentServer.OABExternalURL
+    $OABCmd = "$($CurrentServer.ServerName) | Get-OabVirtualDirectory -ADPropertiesOnly | Set-OabVirtualDirectory"
+    If ($CurrentServer.OABInternalURL -eq $null) {
+        $OABcmd += " -InternalURL $($CurrentServer.OABInternalURL)"
+    } Else {
+        $OABcmd += " -InternalURL `$null"
+    }
+    If ($CurrentServer.OABExternalURL -eq $null) {
+        $OABcmd += " -ExternalURL $($CurrentServer.OABExternalURL)"
+    } Else {
+        $OABcmd += " -ExternalURL `$null"
+    }
+    # If we have the -TestCSV switch enabled, we just print the generated command line. Otherwise, we run it using Invoke-Expression...
+    If (!$TestCSV){
+        Invoke-Expression $OABcmd
+    } Else {
+        Write-Host $OABcmd -BackgroundColor blue -ForegroundColor Yellow
+    }
+
+    # Outlook Web Access aka OWA
+    $StatusMsg = "Setting OWA InternalURL to $($CurrentServer.OWAInternalURL) and OWA ExternalURL to $($CurrentServer.OWAExternalURL)"
+    Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
+    $OWAcmd = "$($CurrentServer.ServerName) | Get-OWAVirtualDirectory -ADPropertiesOnly | Set-OWAVirtualDirectory"
+    If ($CurrentServer.OWAInternalURL -ne $null){
+        $OWAcmd += " -InternalURL $($CurrentServer.OWAInternalURL)"
+    } Else {
+        $OWAcmd += " -InternalURL `$null"
+    }
+    If ($CurrentServer.OWAExternalURL -ne $null){
+        $OWAcmd += " -ExternalURL $($CurrentServer.OWAExternalURL)"
+    } Else {
+        $OWAcmd += " -ExternalURL `$null"
+    }
+    # If we have the -TestCSV switch enabled, we just print the generated command line. Otherwise, we run it using Invoke-Expression...
+    If (!$TestCSV){
+        Invoke-Expression $OWAcmd
+    } Else {
+        Write-Host $OWAcmd -BackgroundColor blue -ForegroundColor Yellow
+    }
+
+    # Outlook Web Access aka ECP
+    $StatusMsg = "Setting ECP InternalURL to $($CurrentServer.ECPInternalURL) and ECP ExternalURL to $($CurrentServer.ECPExternalURL)"
+    Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
+    $ECPcmd = "$($CurrentServer.ServerName) | Get-ECPVirtualDirectory -ADPropertiesOnly | Set-ECPVirtualDirectory"
+    If ($CurrentServer.ECPInternalURL -ne $null){
+        $ECPcmd += " -InternalURL $($CurrentServer.ECPInternalURL)"
+    } Else {
+        $ECPcmd += " -InternalURL `$null"
+    }
+    If ($CurrentServer.ECPExternalURL -ne $null){
+        $ECPcmd += " -ExternalURL $($CurrentServer.ECPExternalURL)"
+    } Else {
+        $ECPcmd += " -ExternalURL `$null"
+    }
+    # If we have the -TestCSV switch enabled, we just print the generated command line. Otherwise, we run it using Invoke-Expression...
+    If (!$TestCSV){
+        Invoke-Expression $ECPcmd
+    } Else {
+        Write-Host $ECPcmd -BackgroundColor blue -ForegroundColor Yellow
+    }
+
+    # Exchange Exchange Web Services
+    $StatusMsg = "Setting EWS InternalURL to $($CurrentServer.EWSInternalURL) and EWS ExternalURL to $($CurrentServer.EWSExternalURL)"
+    Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
+    #$($CurrentServer.ServerName) | Get-WebServicesVirtualDirectory -ADPropertiesOnly | Set-WebServicesVirtualDirectory -InternalURL $CurrentServer.EWSInternalURL -ExternalUrl $CurrentServer.EWSExternalURL
+    $EWSCmd = "$($CurrentServer.ServerName) | Get-WebServicesVirtualDirectory -ADPropertiesOnly | Set-WebServicesVirtualDirectory"
+    If ($CurrentServer.EWSInternalURL -eq $null) {
+        $EWScmd += " -InternalURL $($CurrentServer.EWSInternalURL)"
+    } Else {
+        $EWScmd += " -InternalURL `$null"
+    }
+    If ($CurrentServer.EWSExternalURL -eq $null) {
+        $EWScmd += " -ExternalURL $($CurrentServer.EWSExternalURL)"
+    } Else {
+        $EWScmd += " -ExternalURL `$null"
+    }
+    # If we have the -TestCSV switch enabled, we just print the generated command line. Otherwise, we run it using Invoke-Expression...
+    If (!$TestCSV){
+        Invoke-Expression $EWScmd
+    } Else {
+        Write-Host $EWScmd -BackgroundColor blue -ForegroundColor Yellow
+    }
+
+    # Outlook Anywhere aka OA
+    $StatusMsg = "Setting OutlookAnywhere InternalURL to $($CurrentServer."OutlookAnywhere-InternalHostName(NoneForE2010)") and OutlookAnywhere ExternalURL to $($CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)")"
+    Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
+    $OAcmd = "$($CurrentServer.ServerName) | Get-OutlookAnywhere -ADPropertiesOnly | Set-OutlookAnywhere"
+    If ($CurrentServer.ServerVersion -match "15\."){
+        If ($CurrentServer."OutlookAnywhere-InternalHostName(NoneForE2010)" -ne $null){
+            $OAcmd += " -InternalHostName $($CurrentServer."OutlookAnywhere-InternalHostName(NoneForE2010)")"
+        } Else {
+            $OAcmd += " -InternalHostName `$null"
+        }
+    }
+    If ($CurrentServer.OAExternalURL -ne $null){
+        $OAcmd += " -ExternalHostName $($CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)")"
+    } Else {
+        $OAcmd += " -ExternalHostName `$null"
+    }
+    # If we have the -TestCSV switch enabled, we just print the generated command line. Otherwise, we run it using Invoke-Expression...
+    If (!$TestCSV){
+        Invoke-Expression $OAcmd
+    } Else {
+        Write-Host $OAcmd -BackgroundColor blue -ForegroundColor Yellow
+    }
+
+    # Autodiscover
+    $StatusMsg = "Setting Autodiscover URI (SCP) to $($CurrentServer.AutodiscURI)"
+    Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
     If ($IsThereE2013orE2016){
         Write-Host "Using Get-ClientAccessService (assuming you run the script from an E2013/2016 EMS)" -ForegroundColor Yellow
-        If (!$TestCSV){Set-ClientAccessService $CurrentServer -AutoDiscoverServiceInternalUri $CurrentServer.AutodiscURI}
+        $SCPcmd = "Set-ClientAccessService $($CurrentServer.ServerName) -AutoDiscoverServiceInternalUri $($CurrentServer.AutodiscURI)"
     } Else {
         Write-Host "Using Get-ClientAccessServer (assuming you run the script from an 2010 EMS)" -ForegroundColor Yellow
-        If (!$TestCSV){Set-ClientAccessServer $CurrentServer -AutoDiscoverServiceInternalUri $CurrentServer.AutodiscURI}
+        $SCPcmd = "Set-ClientAccessServer $($CurrentServer.ServerName) -AutoDiscoverServiceInternalUri $($CurrentServer.AutodiscURI)"
+    }
+    If (!$TestCSV){
+        Invoke-Expression $SCPcmd
+    } Else {
+        Write-Host $SCPcmd -BackgroundColor blue -ForegroundColor Yellow
     }
 }
 
