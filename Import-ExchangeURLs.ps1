@@ -258,7 +258,11 @@ Foreach ($CurrentServer in $ServersConfigs) {
             Exit
         }
     }
-        
+    
+    If ($DebugVerbose){
+        $CurrentServer | fl
+    }
+
     # Exchange ActiveSync aka EAS
     $StatusMsg = "Setting EAS InternalURL to $($CurrentServer.EASInternalURL) and EAS ExternalURL to $($CurrentServer.EASExternalURL)"
     # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
@@ -292,12 +296,16 @@ Foreach ($CurrentServer in $ServersConfigs) {
     }
     #endregion #### END OF TEST ROUTING FOR DEBUG ######
     If (IsNotEmpty $CurrentServer.EASexternalURL){
-        LogMag "EAS ExternalURL is NOT null and is equal to $($CurrentServer.EASExternalURL)"
-        LogMag "Length of characters : $($CurrentServer.EASExternalURL.Length)"
+        If ($DebugVerbose){
+            LogMag "EAS ExternalURL is NOT null and is equal to $($CurrentServer.EASExternalURL)"
+            LogMag "Length of characters : $($CurrentServer.EASExternalURL.Length)"
+        }
         $EAScmd += " -ExternalURL $($CurrentServer.EASExternalURL)"
     } Else {
-        LogMag "EAS ExternalURL is null and is equal to $($CurrentServer.EASExternalURL)"
-        LogMag "Length of characters : $($CurrentServer.EASExternalURL.Length)"
+        If ($DebugVerbose){
+            LogMag "EAS ExternalURL is null and is equal to $($CurrentServer.EASExternalURL)"
+            LogMag "Length of characters : $($CurrentServer.EASExternalURL.Length)"
+        }
         $EAScmd += " -ExternalURL `$null"
     }
     # If we have the -TestCSV switch enabled, we just print the generated command line. Otherwise, we run it using Invoke-Expression...
