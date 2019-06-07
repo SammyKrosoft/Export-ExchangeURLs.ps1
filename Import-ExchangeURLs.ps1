@@ -251,7 +251,7 @@ Foreach ($CurrentServer in $ServersConfigs) {
     # the name string to build the command line...
     If (!$TestCSV){
         Try {
-            Get-ExchangeServer $CurrentServer.ServerName -ErrorAction Stop
+            Get-ExchangeServer $CurrentServer.ServerName -ErrorAction Stop | ft Name,domain,Site,ServerRole
         }
         Catch{
             Write-Host "Server does not exist - please recheck your server names in your CSV, and remove the unexisting server names..."
@@ -267,7 +267,7 @@ Foreach ($CurrentServer in $ServersConfigs) {
     $StatusMsg = "Setting EAS InternalURL to $($CurrentServer.EASInternalURL) and EAS ExternalURL to $($CurrentServer.EASExternalURL)"
     # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
     LogMag $StatusMsg
-    $EAScmd = "$($CurrentServer.ServerName) | Get-ActiveSyncVirtualDirectory -ADPropertiesOnly | Set-ActiveSyncVirtualDirectory"
+    $EAScmd = "Get-ActiveSyncVirtualDirectory -Server $($CurrentServer.ServerName) -ADPropertiesOnly | Set-ActiveSyncVirtualDirectory"
     #region #### VALUE TEST ROUTINE FOR DEBUG ######
     If ($DebugVerbose){
         LogGreen "Status of EAS InternalURL: "
@@ -324,7 +324,7 @@ Foreach ($CurrentServer in $ServersConfigs) {
     # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
     LogMag $StatusMsg
     # $($CurrentServer.ServerName) | Get-OabVirtualDirectory -ADPropertiesOnly | Set-OabVirtualDirectory -InternalURL $CurrentServer.OABInternalURL -ExternalUrl $CurrentServer.OABExternalURL
-    $OABCmd = "$($CurrentServer.ServerName) | Get-OabVirtualDirectory -ADPropertiesOnly | Set-OabVirtualDirectory"
+    $OABCmd = "Get-OabVirtualDirectory -Server $($CurrentServer.ServerName) -ADPropertiesOnly | Set-OabVirtualDirectory"
     #region #### VALUE TEST ROUTINE FOR DEBUG ######
     If ($DebugVerbose){
         LogGreen "Status of OAB InternalURL: "
@@ -367,7 +367,7 @@ Foreach ($CurrentServer in $ServersConfigs) {
     $StatusMsg = "Setting OWA InternalURL to $($CurrentServer.OWAInternalURL) and OWA ExternalURL to $($CurrentServer.OWAExternalURL)"
     # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
     LogMag $StatusMsg
-    $OWAcmd = "$($CurrentServer.ServerName) | Get-OWAVirtualDirectory -ADPropertiesOnly | Set-OWAVirtualDirectory"
+    $OWAcmd = "Get-OWAVirtualDirectory -Server $($CurrentServer.ServerName) -ADPropertiesOnly | Set-OWAVirtualDirectory"
     #region #### VALUE TEST ROUTINE FOR DEBUG ######
     If ($DebugVerbose){
         LogGreen "Status of OWA InternalURL: "
@@ -409,7 +409,7 @@ Foreach ($CurrentServer in $ServersConfigs) {
     $StatusMsg = "Setting ECP InternalURL to $($CurrentServer.ECPInternalURL) and ECP ExternalURL to $($CurrentServer.ECPExternalURL)"
     # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
     LogMag $StatusMsg
-    $ECPcmd = "$($CurrentServer.ServerName) | Get-ECPVirtualDirectory -ADPropertiesOnly | Set-ECPVirtualDirectory"
+    $ECPcmd = "Get-ECPVirtualDirectory -Server $($CurrentServer.ServerName) -ADPropertiesOnly | Set-ECPVirtualDirectory"
     If ($CurrentServer.ECPInternalURL -ne $null){
         $ECPcmd += " -InternalURL $($CurrentServer.ECPInternalURL)"
     } Else {
@@ -432,7 +432,7 @@ Foreach ($CurrentServer in $ServersConfigs) {
     # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
     LogMag $StatusMsg
     #$($CurrentServer.ServerName) | Get-WebServicesVirtualDirectory -ADPropertiesOnly | Set-WebServicesVirtualDirectory -InternalURL $CurrentServer.EWSInternalURL -ExternalUrl $CurrentServer.EWSExternalURL
-    $EWSCmd = "$($CurrentServer.ServerName) | Get-WebServicesVirtualDirectory -ADPropertiesOnly | Set-WebServicesVirtualDirectory"
+    $EWSCmd = "Get-WebServicesVirtualDirectory -Server $($CurrentServer.ServerName) -ADPropertiesOnly | Set-WebServicesVirtualDirectory"
     If ($CurrentServer.EWSInternalURL -ne $null) {
         $EWScmd += " -InternalURL $($CurrentServer.EWSInternalURL)"
     } Else {
@@ -454,7 +454,7 @@ Foreach ($CurrentServer in $ServersConfigs) {
     $StatusMsg = "Setting OutlookAnywhere InternalURL to $($CurrentServer."OutlookAnywhere-InternalHostName(NoneForE2010)") and OutlookAnywhere ExternalURL to $($CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)")"
     # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
     LogMag $StatusMsg
-    $OAcmd = "$($CurrentServer.ServerName) | Get-OutlookAnywhere -ADPropertiesOnly | Set-OutlookAnywhere"
+    $OAcmd = "Get-OutlookAnywhere -Server $($CurrentServer.ServerName) -ADPropertiesOnly | Set-OutlookAnywhere"
     If ($CurrentServer.ServerVersion -match "15\."){
         If ($CurrentServer."OutlookAnywhere-InternalHostName(NoneForE2010)" -ne $null){
             $OAcmd += " -InternalHostName $($CurrentServer."OutlookAnywhere-InternalHostName(NoneForE2010)")"
