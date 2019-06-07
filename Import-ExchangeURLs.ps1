@@ -218,7 +218,7 @@ $RequiredColumnsCollection = "ServerName","ServerVersion","EASInternalURL","EASE
 
 $ServersConfigs = import-ValidCSV -inputFile $InputCSV -requiredColumns $RequiredColumnsCollection
 #Trimming all values to ensure no leading or trailing spaces
-$ServersConfigs | ForEach-Object {$_.PSObject.Properties | ForEach-Object {$_.Value = $_.Value.Trim()}}
+$ServersConfigs | ForEach-Object {$_.PSObject.Properties | ForEach-Object {If(IsNotEmpty $_.Value){$_.Value = $_.Value.Trim()}}}
 
 If($TestCSV){
     Write-Host "There are $($ServersConfigs.count) servers to parse on this CSV, here's the list:"
@@ -251,7 +251,7 @@ Foreach ($CurrentServer in $ServersConfigs) {
     # the name string to build the command line...
     If (!$TestCSV){
         Try {
-            Get-ExchangeServer $CurrentServer.ServerName -ErrorAction Stop | ft Name,domain,Site,ServerRole
+            Get-ExchangeServer $CurrentServer.ServerName -ErrorAction Stop | Select Name,domain,Site,ServerRole
         }
         Catch{
             Write-Host "Server does not exist - please recheck your server names in your CSV, and remove the unexisting server names..."
