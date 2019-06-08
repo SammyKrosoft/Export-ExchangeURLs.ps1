@@ -25,9 +25,9 @@ NAME
     .\Import-ExchangeURLs.ps1
 
 SYNOPSIS
-    This script will help you set up your Exchange Virtual Directories, including AutoDiscoverfrom a CSV file
-    it takes in Input. This CSV file can contain one or as many servers as you need to configure the
-    Virtual Directories for.
+    This script will help you set up your Exchange Virtual Directories, including 
+    AutoDiscoverfrom a CSV file it takes in Input. This CSV file can contain one or as many
+    servers as you need to configure the Virtual Directories for.
 
 
 SYNTAX
@@ -50,7 +50,7 @@ DESCRIPTION
 
     IMPORTANT ADVICE: Always use Export-ExchangeURLsv3.ps1 to export all your current URLs before any
     modifications => that way you'll just have to use that export with this script to set
-    the Virtual Directories and/or Autodiscover value(s) to what they were initially.
+    the Virtual Directories and/or Autodiscover value(s) back to what they were initially.
 
 
 PARAMETERS
