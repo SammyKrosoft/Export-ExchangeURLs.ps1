@@ -107,8 +107,6 @@ OUTPUTS
 
 
 NOTES
-
-
         Again, it's strongly recommended to:
         #1 - Export your current URLs and Autodiscover settings using the Export-ExchangeURLsv3.ps1 script to be able to easily roll back
         if need be, and keep the original CSV export. Create a copy of that exported CSV that we will modify and use that modified copy
