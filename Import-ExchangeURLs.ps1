@@ -17,7 +17,7 @@
 
     IMPORTANT ADVICE: Always use Export-ExchangeURLsv3.ps1 to export all your current URLs before any
     modifications => that way you'll just have to use that export with this script to set
-    the Virtual Directories and/or Autodiscover value(s) to what they were initially.
+    the Virtual Directories and/or Autodiscover value(s) back to what they were initially.
 
 .PARAMETER InputCSV
     Specifies the CSV to input (will be validated in the script)
