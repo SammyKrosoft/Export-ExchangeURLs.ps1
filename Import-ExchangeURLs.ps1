@@ -497,6 +497,7 @@ Foreach ($CurrentServer in $ServersConfigs) {
     # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
     LogMag $StatusMsg
     $OAcmd = "Get-OutlookAnywhere -Server $($CurrentServer.ServerName) -ADPropertiesOnly | Set-OutlookAnywhere"
+    # Exchange 2010 does NOT have any  InternalHohstNAme ... just setting InternalHostName if it's Exchange 2013/2016/2019
     If ($CurrentServer.ServerVersion -match "15\."){
         If ($CurrentServer."OutlookAnywhere-InternalHostName(NoneForE2010)" -ne $null){
             $OAcmd += " -InternalHostName $($CurrentServer."OutlookAnywhere-InternalHostName(NoneForE2010)") -InternalClientsRequireSsl $true"
@@ -505,7 +506,12 @@ Foreach ($CurrentServer in $ServersConfigs) {
         }
     }
     If ($CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)" -ne $null){
+        If ($CurrentServer.ServerVersion -match "15\."){
         $OAcmd += " -ExternalHostName $($CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)") -ExternalClientsRequireSsl $true"
+        } Elseif ($CurrentServer.ServerVersion -match "14\."){
+            # If Exchange 2010 server, then we set ExternalHostName, but without -ExternalClientsRequireSSL switch (that switch is for E2013/2016/2019 only)
+            $OAcmd += " -ExternalHostName $($CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)")"
+        }
     } Else {
         $OAcmd += " -ExternalHostName `$null"
     }
