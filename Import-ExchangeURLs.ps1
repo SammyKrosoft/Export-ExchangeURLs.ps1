@@ -505,7 +505,7 @@ Foreach ($CurrentServer in $ServersConfigs) {
         }
     }
     If ($CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)" -ne $null){
-        $OAcmd += " -ExternalHostName $($CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)")"
+        $OAcmd += " -ExternalHostName $($CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)") -ExternalClientsRequireSsl $true"
     } Else {
         $OAcmd += " -ExternalHostName `$null"
     }
