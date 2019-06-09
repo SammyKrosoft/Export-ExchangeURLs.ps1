@@ -377,7 +377,7 @@ Foreach ($CurrentServer in $ServersConfigs) {
         LogGreen "$($CurrentServer.OABInternalURL -eq $null)"
     }
     #endregion #### END OF TEST ROUTING FOR DEBUG ######
-    If ($CurrentServer.OABInternalURL -ne $null) {
+    If (IsNotEmpty $CurrentServer.OABInternalURL) {
         $OABcmd += " -InternalURL $($CurrentServer.OABInternalURL)"
     } Else {
         LogMag "OAB Internal URL is NULL and equal to $($CurrentServer.OABInternalURL)"
@@ -385,7 +385,7 @@ Foreach ($CurrentServer in $ServersConfigs) {
     }
     #region #### VALUE TEST ROUTINE FOR DEBUG ######
     If ($DebugVerbose){
-        LogGreen "Status of OAB ExternalURL: "
+        LogGreen "Status of OAB ExternalURL:"
         LogGreen "Value: $($CurrentServer.OABExternalURL)"
         LogGreen "Is it blank ?"
         LogGreen "$($CurrentServer.OABExternalURL -eq """")"
@@ -393,7 +393,7 @@ Foreach ($CurrentServer in $ServersConfigs) {
         LogGreen "$($CurrentServer.OABExternalURL -eq $null)"
     }
     #endregion #### END OF TEST ROUTING FOR DEBUG ######
-    If ($CurrentServer.OABExternalURL -ne $null) {
+    If (IsNotEmpty $CurrentServer.OABExternalURL) {
         $OABcmd += " -ExternalURL $($CurrentServer.OABExternalURL)"
     } Else {
         $OABcmd += " -ExternalURL `$null"
@@ -420,7 +420,7 @@ Foreach ($CurrentServer in $ServersConfigs) {
         LogGreen "$($CurrentServer.OWAInternalURL -eq $null)"
     }
     #endregion #### END OF TEST ROUTING FOR DEBUG ######
-    If ($CurrentServer.OWAInternalURL -ne $null){
+    If (IsNotEmpty $CurrentServer.OWAInternalURL){
         $OWAcmd += " -InternalURL $($CurrentServer.OWAInternalURL)"
     } Else {
         $OWAcmd += " -InternalURL `$null"
@@ -435,7 +435,7 @@ Foreach ($CurrentServer in $ServersConfigs) {
             LogGreen "$($CurrentServer.OWAInternalURL -eq $null)"
         }
         #endregion #### END OF TEST ROUTING FOR DEBUG ######
-    If ($CurrentServer.OWAExternalURL -ne $null){
+    If (IsNotEmpty $CurrentServer.OWAExternalURL){
         $OWAcmd += " -ExternalURL $($CurrentServer.OWAExternalURL)"
     } Else {
         $OWAcmd += " -ExternalURL `$null"
@@ -452,12 +452,12 @@ Foreach ($CurrentServer in $ServersConfigs) {
     # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
     LogMag $StatusMsg
     $ECPcmd = "Get-ECPVirtualDirectory -Server $($CurrentServer.ServerName) -ADPropertiesOnly | Set-ECPVirtualDirectory"
-    If ($CurrentServer.ECPInternalURL -ne $null){
+    If (IsNotEmpty $CurrentServer.ECPInternalURL){
         $ECPcmd += " -InternalURL $($CurrentServer.ECPInternalURL)"
     } Else {
         $ECPcmd += " -InternalURL `$null"
     }
-    If ($CurrentServer.ECPExternalURL -ne $null){
+    If (IsNotEmpty $CurrentServer.ECPExternalURL){
         $ECPcmd += " -ExternalURL $($CurrentServer.ECPExternalURL)"
     } Else {
         $ECPcmd += " -ExternalURL `$null"
@@ -475,12 +475,12 @@ Foreach ($CurrentServer in $ServersConfigs) {
     LogMag $StatusMsg
     #$($CurrentServer.ServerName) | Get-WebServicesVirtualDirectory -ADPropertiesOnly | Set-WebServicesVirtualDirectory -InternalURL $CurrentServer.EWSInternalURL -ExternalUrl $CurrentServer.EWSExternalURL
     $EWSCmd = "Get-WebServicesVirtualDirectory -Server $($CurrentServer.ServerName) -ADPropertiesOnly | Set-WebServicesVirtualDirectory"
-    If ($CurrentServer.EWSInternalURL -ne $null) {
+    If (IsNotEmpty $CurrentServer.EWSInternalURL) {
         $EWScmd += " -InternalURL $($CurrentServer.EWSInternalURL)"
     } Else {
         $EWScmd += " -InternalURL `$null"
     }
-    If ($CurrentServer.EWSExternalURL -ne $null) {
+    If (IsNotEmpty $CurrentServer.EWSExternalURL) {
         $EWScmd += " -ExternalURL $($CurrentServer.EWSExternalURL)"
     } Else {
         $EWScmd += " -ExternalURL `$null"
@@ -499,15 +499,15 @@ Foreach ($CurrentServer in $ServersConfigs) {
     $OAcmd = "Get-OutlookAnywhere -Server $($CurrentServer.ServerName) -ADPropertiesOnly | Set-OutlookAnywhere"
     # Exchange 2010 does NOT have any  InternalHohstNAme ... just setting InternalHostName if it's Exchange 2013/2016/2019
     If ($CurrentServer.ServerVersion -match "15\."){
-        If ($CurrentServer."OutlookAnywhere-InternalHostName(NoneForE2010)" -ne $null){
-            $OAcmd += " -InternalHostName $($CurrentServer."OutlookAnywhere-InternalHostName(NoneForE2010)") -InternalClientsRequireSsl $true"
+        If (IsNotEmpty $CurrentServer."OutlookAnywhere-InternalHostName(NoneForE2010)"){
+            $OAcmd += " -InternalHostName $($CurrentServer."OutlookAnywhere-InternalHostName(NoneForE2010)") -InternalClientsRequireSsl `$true"
         } Else {
             $OAcmd += " -InternalHostName `$null"
         }
     }
-    If ($CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)" -ne $null){
+    If (IsNotEmpty $CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)"){
         If ($CurrentServer.ServerVersion -match "15\."){
-        $OAcmd += " -ExternalHostName $($CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)") -ExternalClientsRequireSsl $true"
+        $OAcmd += " -ExternalHostName $($CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)") -ExternalClientsRequireSsl `$true"
         } Elseif ($CurrentServer.ServerVersion -match "14\."){
             # If Exchange 2010 server, then we set ExternalHostName, but without -ExternalClientsRequireSSL switch (that switch is for E2013/2016/2019 only)
             $OAcmd += " -ExternalHostName $($CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)")"
