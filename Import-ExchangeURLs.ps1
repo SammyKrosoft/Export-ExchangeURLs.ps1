@@ -499,7 +499,7 @@ Foreach ($CurrentServer in $ServersConfigs) {
     $OAcmd = "Get-OutlookAnywhere -Server $($CurrentServer.ServerName) -ADPropertiesOnly | Set-OutlookAnywhere"
     If ($CurrentServer.ServerVersion -match "15\."){
         If ($CurrentServer."OutlookAnywhere-InternalHostName(NoneForE2010)" -ne $null){
-            $OAcmd += " -InternalHostName $($CurrentServer."OutlookAnywhere-InternalHostName(NoneForE2010)")"
+            $OAcmd += " -InternalHostName $($CurrentServer."OutlookAnywhere-InternalHostName(NoneForE2010)") -InternalClientsRequireSsl $true"
         } Else {
             $OAcmd += " -InternalHostName `$null"
         }
