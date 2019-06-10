@@ -22,9 +22,9 @@
 .PARAMETER InputCSV
     Specifies the CSV to input (will be validated in the script)
 
-.PARAMETER TestCSV 
+.PARAMETER GenerateCommandsOnly 
     This switch will just get all the values in the CSV file specified in the InputCSV property, and 
-    print on screen all the actions that the script will perform without the -TestCSV switch.
+    print on screen all the actions that the script will perform without the -GenerateCommandsOnly switch.
 
 .PARAMETER DebugVerbose
     This swich Will enable output of additional details regarding the attributes values and test whether
@@ -46,13 +46,13 @@ SCRIPT NAME : Import-ExchangeURLs.ps1
 VERSION : v1.0
 
 .EXAMPLE
-.\Import-ExchangeURLs.ps1 -InputCSV .\ServersConfig.csv -TestCSV
+.\Import-ExchangeURLs.ps1 -InputCSV .\ServersConfig.csv -GenerateCommandsOnly
 This will launch the script and print only without executing the PowerShell command lines it will execute to update
 the Exchange Virtual Directories according to the information provided in the ServersConfig.csv file
 specified on the -InputCSV parameter.
 
 .EXAMPLE
-.\Import-ExchangeURLs.ps1 -InputCSV .\ServersConfig.csv -DebugVerbose -TestCSV
+.\Import-ExchangeURLs.ps1 -InputCSV .\ServersConfig.csv -DebugVerbose -GenerateCommandsOnly
 This will launch the script and print only without executing the PowerShell command lines it will execute to update
 the Exchange Virtual Directories according to the information provided in the ServersConfig.csv file
 specified on the -InputCSV parameter, as well as output additional details about he actions, comparisons, and some other stuff the script does...
@@ -73,7 +73,7 @@ Again, it's strongly recommended to:
 #1 - Export your current URLs and Autodiscover settings using the Export-ExchangeURLsv3.ps1 script to be able to easily roll back
 if need be, and keep the original CSV export. Create a copy of that exported CSV that we will modify and use that modified copy
 with the script to set the Exchange vDir properties.
-#2 - Always run the Import-ExchangeURLs.ps1 script with the -TestCSV first, and review all the command lines that the script will
+#2 - Always run the Import-ExchangeURLs.ps1 script with the -GenerateCommandsOnly first, and review all the command lines that the script will
 execute
 #3 - the -DebugVerbose switch is not mandatory, it's mostly for debug purposes if the script crashes or doesn't behave as intended
 
@@ -86,7 +86,7 @@ execute
 [CmdLetBinding(DefaultParameterSetName = "NormalRun")]
 Param(
     [Parameter(Mandatory = $True, Position = 1, ParameterSetName = "NormalRun")][String]$InputCSV,
-    [Parameter(Mandatory = $False, Position = 2, ParameterSetName = "NormalRun")][switch]$TestCSV,
+    [Parameter(Mandatory = $False, Position = 2, ParameterSetName = "NormalRun")][switch]$GenerateCommandsOnly,
     [Parameter(Mandatory = $False, Position = 3, ParameterSetName = "NormalRun")][switch]$DebugVerbose,
     [Parameter(Mandatory = $false, Position = 4, ParameterSetName = "CheckOnly")][switch]$CheckVersion
 )
@@ -100,11 +100,14 @@ $DebugPreference = "Stop"
 # Set Error Action to your needs
 $ErrorActionPreference = "Stop"
 #Script Version
-$ScriptVersion = "1"
+$ScriptVersion = "1.2"
 <# Version changes
 v0.1 : first script version
 v0.1 -> v1 : finalized version. To be fixed next : output text when setting a property to "$null". This is cosmetic minor change
 that does not impact the script purpose and actions.
+v1.0-> v1.1 : fixed Set-OutlookAnywhere, added -Internal/ExternalClientsRequireSSL when server is Exchange 2013/2016, added usage of IsNotEmpty function
+instead of comparison with $null as sometimes blank CSV cells is reported as empty string, sometimes as $null
+v1.1 -> v1.2 : added # character on output text to enable users to use generated scripts when using -GenerateCommandsOnly instead of letting the script to set all URLs
 #>
 $ScriptName = $MyInvocation.MyCommand.Name
 If ($CheckVersion) {Write-Host "SCRIPT NAME     : $ScriptName `nSCRIPT VERSION  : $ScriptVersion";exit}
@@ -140,7 +143,7 @@ Function Title1 ($title, $TotalLength = 100, $Back = "Yellow", $Fore = "Black") 
         $counter++
     }
     
-    $Title = $StarsBeforeAndAfter + $Title + $StarsBeforeAndAfter
+    $Title = "# " + $StarsBeforeAndAfter + $Title + $StarsBeforeAndAfter
     Write-host
     Write-Host $Title -BackgroundColor $Back -foregroundcolor $Fore
     Write-Host
@@ -252,7 +255,7 @@ function import-ValidCSV {
 }
 <# /FUNCTIONS #>
 <# -------------------------- EXECUTIONS -------------------------- #>
-If (!($TestCSV)){Test-ExchTools}
+If (!($GenerateCommandsOnly)){Test-ExchTools}
 
 $RequiredColumnsCollection = "ServerName","ServerVersion","EASInternalURL","EASExternalURL","OABInternalURL","OABExernalURL","OWAInternalURL","OWAExernalURL","ECPInternalURL","ECPExernalURL","AutoDiscURI","EWSInternalURL","EWSExernalURL","OutlookAnywhere-InternalHostName(NoneForE2010)","OutlookAnywhere-ExternalHostNAme(E2010+)"
 
@@ -262,7 +265,7 @@ $ServersConfigs = import-ValidCSV -inputFile $InputCSV -requiredColumns $Require
 #Trimming all values to ensure no leading or trailing spaces
 $ServersConfigs | ForEach-Object {$_.PSObject.Properties | ForEach-Object {If(IsNotEmpty $_.Value){$_.Value = $_.Value.Trim()}}}
 
-If($TestCSV){
+If($GenerateCommandsOnly){
     Write-Host "There are $($ServersConfigs.count) servers to parse on this CSV, here's the list:"
     $ServersConfigs | ft ServerName,@{Label = "Version"; Expression={"V." + $(($_.ServerVersion).Substring(8,4))}}
 }
@@ -289,9 +292,9 @@ Foreach ($CurrentServer in $ServersConfigs) {
 
     Title1 "Getting Exchange server $($CurrentServer.ServerName)"
     # If we don't just test the script, we query the Server Object in another variable. It's only to test if the server is reachable
-    # If server is not joigneable, we stop the script. If -TestCSV switch enabled, we don't test the server reachability, and we keep just 
+    # If server is not joigneable, we stop the script. If -GenerateCommandsOnly switch enabled, we don't test the server reachability, and we keep just 
     # the name string to build the command line...
-    If (!$TestCSV){
+    If (!$GenerateCommandsOnly){
         Try {
             Get-ExchangeServer $CurrentServer.ServerName -ErrorAction Stop | Select Name,domain,Site,ServerRole
         }
@@ -306,7 +309,7 @@ Foreach ($CurrentServer in $ServersConfigs) {
     }
 
     # Exchange ActiveSync aka EAS
-    $StatusMsg = "`"# Setting EAS InternalURL to $($CurrentServer.EASInternalURL) and EAS ExternalURL to $($CurrentServer.EASExternalURL)"
+    $StatusMsg = "# Setting EAS InternalURL to $($CurrentServer.EASInternalURL) and EAS ExternalURL to $($CurrentServer.EASExternalURL)"
     # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
     LogMag $StatusMsg
     $EAScmd = "Get-ActiveSyncVirtualDirectory -Server $($CurrentServer.ServerName) -ADPropertiesOnly | Set-ActiveSyncVirtualDirectory"
@@ -354,15 +357,15 @@ Foreach ($CurrentServer in $ServersConfigs) {
         }
         $EAScmd += " -ExternalURL `$null"
     }
-    # If we have the -TestCSV switch enabled, we just print the generated command line. Otherwise, we run it using Invoke-Expression...
-    If (!$TestCSV){
+    # If we have the -GenerateCommandsOnly switch enabled, we just print the generated command line. Otherwise, we run it using Invoke-Expression...
+    If (!$GenerateCommandsOnly){
         Invoke-Expression $EAScmd
     } Else {
         Write-Host $EAScmd -BackgroundColor blue -ForegroundColor Yellow
     }
 
     # Exchange OfflineAddressBook 
-    $StatusMsg = "`"# Setting OAB InternalURL to $($CurrentServer.OABInternalURL) and OAB ExternalURL to $($CurrentServer.OABExternalURL)"
+    $StatusMsg = "# Setting OAB InternalURL to $($CurrentServer.OABInternalURL) and OAB ExternalURL to $($CurrentServer.OABExternalURL)"
     # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
     LogMag $StatusMsg
     # $($CurrentServer.ServerName) | Get-OabVirtualDirectory -ADPropertiesOnly | Set-OabVirtualDirectory -InternalURL $CurrentServer.OABInternalURL -ExternalUrl $CurrentServer.OABExternalURL
@@ -398,15 +401,15 @@ Foreach ($CurrentServer in $ServersConfigs) {
     } Else {
         $OABcmd += " -ExternalURL `$null"
     }
-    # If we have the -TestCSV switch enabled, we just print the generated command line. Otherwise, we run it using Invoke-Expression...
-    If (!$TestCSV){
+    # If we have the -GenerateCommandsOnly switch enabled, we just print the generated command line. Otherwise, we run it using Invoke-Expression...
+    If (!$GenerateCommandsOnly){
         Invoke-Expression $OABcmd
     } Else {
         Write-Host $OABcmd -BackgroundColor blue -ForegroundColor Yellow
     }
 
     # Outlook Web Access aka OWA
-    $StatusMsg = "`"# Setting OWA InternalURL to $($CurrentServer.OWAInternalURL) and OWA ExternalURL to $($CurrentServer.OWAExternalURL)"
+    $StatusMsg = "# Setting OWA InternalURL to $($CurrentServer.OWAInternalURL) and OWA ExternalURL to $($CurrentServer.OWAExternalURL)"
     # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
     LogMag $StatusMsg
     $OWAcmd = "Get-OWAVirtualDirectory -Server $($CurrentServer.ServerName) -ADPropertiesOnly | Set-OWAVirtualDirectory"
@@ -440,15 +443,15 @@ Foreach ($CurrentServer in $ServersConfigs) {
     } Else {
         $OWAcmd += " -ExternalURL `$null"
     }
-    # If we have the -TestCSV switch enabled, we just print the generated command line. Otherwise, we run it using Invoke-Expression...
-    If (!$TestCSV){
+    # If we have the -GenerateCommandsOnly switch enabled, we just print the generated command line. Otherwise, we run it using Invoke-Expression...
+    If (!$GenerateCommandsOnly){
         Invoke-Expression $OWAcmd
     } Else {
         Write-Host $OWAcmd -BackgroundColor blue -ForegroundColor Yellow
     }
 
     # Outlook Web Access aka ECP
-    $StatusMsg = "`"# Setting ECP InternalURL to $($CurrentServer.ECPInternalURL) and ECP ExternalURL to $($CurrentServer.ECPExternalURL)"
+    $StatusMsg = "# Setting ECP InternalURL to $($CurrentServer.ECPInternalURL) and ECP ExternalURL to $($CurrentServer.ECPExternalURL)"
     # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
     LogMag $StatusMsg
     $ECPcmd = "Get-ECPVirtualDirectory -Server $($CurrentServer.ServerName) -ADPropertiesOnly | Set-ECPVirtualDirectory"
@@ -462,15 +465,15 @@ Foreach ($CurrentServer in $ServersConfigs) {
     } Else {
         $ECPcmd += " -ExternalURL `$null"
     }
-    # If we have the -TestCSV switch enabled, we just print the generated command line. Otherwise, we run it using Invoke-Expression...
-    If (!$TestCSV){
+    # If we have the -GenerateCommandsOnly switch enabled, we just print the generated command line. Otherwise, we run it using Invoke-Expression...
+    If (!$GenerateCommandsOnly){
         Invoke-Expression $ECPcmd
     } Else {
         Write-Host $ECPcmd -BackgroundColor blue -ForegroundColor Yellow
     }
 
     # Exchange Exchange Web Services
-    $StatusMsg = "`"# Setting EWS InternalURL to $($CurrentServer.EWSInternalURL) and EWS ExternalURL to $($CurrentServer.EWSExternalURL)"
+    $StatusMsg = "# Setting EWS InternalURL to $($CurrentServer.EWSInternalURL) and EWS ExternalURL to $($CurrentServer.EWSExternalURL)"
     # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
     LogMag $StatusMsg
     #$($CurrentServer.ServerName) | Get-WebServicesVirtualDirectory -ADPropertiesOnly | Set-WebServicesVirtualDirectory -InternalURL $CurrentServer.EWSInternalURL -ExternalUrl $CurrentServer.EWSExternalURL
@@ -485,15 +488,15 @@ Foreach ($CurrentServer in $ServersConfigs) {
     } Else {
         $EWScmd += " -ExternalURL `$null"
     }
-    # If we have the -TestCSV switch enabled, we just print the generated command line. Otherwise, we run it using Invoke-Expression...
-    If (!$TestCSV){
+    # If we have the -GenerateCommandsOnly switch enabled, we just print the generated command line. Otherwise, we run it using Invoke-Expression...
+    If (!$GenerateCommandsOnly){
         Invoke-Expression $EWScmd
     } Else {
         Write-Host $EWScmd -BackgroundColor blue -ForegroundColor Yellow
     }
 
     # Outlook Anywhere aka OA
-    $StatusMsg = "`"# Setting OutlookAnywhere InternalURL to $($CurrentServer."OutlookAnywhere-InternalHostName(NoneForE2010)") and OutlookAnywhere ExternalURL to $($CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)")"
+    $StatusMsg = "# Setting OutlookAnywhere InternalURL to $($CurrentServer."OutlookAnywhere-InternalHostName(NoneForE2010)") and OutlookAnywhere ExternalURL to $($CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)")"
     # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
     LogMag $StatusMsg
     $OAcmd = "Get-OutlookAnywhere -Server $($CurrentServer.ServerName) -ADPropertiesOnly | Set-OutlookAnywhere"
@@ -515,25 +518,25 @@ Foreach ($CurrentServer in $ServersConfigs) {
     } Else {
         $OAcmd += " -ExternalHostName `$null"
     }
-    # If we have the -TestCSV switch enabled, we just print the generated command line. Otherwise, we run it using Invoke-Expression...
-    If (!$TestCSV){
+    # If we have the -GenerateCommandsOnly switch enabled, we just print the generated command line. Otherwise, we run it using Invoke-Expression...
+    If (!$GenerateCommandsOnly){
         Invoke-Expression $OAcmd
     } Else {
         Write-Host $OAcmd -BackgroundColor blue -ForegroundColor Yellow
     }
 
     # Autodiscover
-    $StatusMsg = "`"# Setting Autodiscover URI (SCP) to $($CurrentServer.AutodiscURI)"
+    $StatusMsg = "# Setting Autodiscover URI (SCP) to $($CurrentServer.AutodiscURI)"
     # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
     LogMag $StatusMsg
     If ($IsThereE2013orE2016){
-        LogGreen "Using Get-ClientAccessService (assuming you run the script from an E2013/2016 EMS)"
+        LogGreen "# Using Get-ClientAccessService (assuming you run the script from an E2013/2016 EMS)"
         $SCPcmd = "Set-ClientAccessService $($CurrentServer.ServerName) -AutoDiscoverServiceInternalUri $($CurrentServer.AutodiscURI)"
     } Else {
-        LogGreen "Using Get-ClientAccessServer (assuming you run the script from an 2010 EMS)" -ForegroundColor Yellow
+        LogGreen "# Using Get-ClientAccessServer (assuming you run the script from an 2010 EMS)" -ForegroundColor Yellow
         $SCPcmd = "Set-ClientAccessServer $($CurrentServer.ServerName) -AutoDiscoverServiceInternalUri $($CurrentServer.AutodiscURI)"
     }
-    If (!$TestCSV){
+    If (!$GenerateCommandsOnly){
         Invoke-Expression $SCPcmd
     } Else {
         Write-Host $SCPcmd -BackgroundColor blue -ForegroundColor Yellow
