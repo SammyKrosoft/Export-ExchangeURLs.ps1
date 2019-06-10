@@ -306,7 +306,7 @@ Foreach ($CurrentServer in $ServersConfigs) {
     }
     
     If ($DebugVerbose){
-        $CurrentServer | fl
+        $CurrentServer
     }
 
     # Exchange ActiveSync aka EAS
