@@ -100,7 +100,7 @@ $DebugPreference = "Stop"
 # Set Error Action to your needs
 $ErrorActionPreference = "Stop"
 #Script Version
-$ScriptVersion = "1.2"
+$ScriptVersion = "1.3"
 <# Version changes
 v0.1 : first script version
 v0.1 -> v1 : finalized version. To be fixed next : output text when setting a property to "$null". This is cosmetic minor change
@@ -108,6 +108,7 @@ that does not impact the script purpose and actions.
 v1.0-> v1.1 : fixed Set-OutlookAnywhere, added -Internal/ExternalClientsRequireSSL when server is Exchange 2013/2016, added usage of IsNotEmpty function
 instead of comparison with $null as sometimes blank CSV cells is reported as empty string, sometimes as $null
 v1.1 -> v1.2 : added # character on output text to enable users to use generated scripts when using -GenerateCommandsOnly instead of letting the script to set all URLs
+v1.3: renamed -TestCSV switch to -GenerateCommandsOnly
 #>
 $ScriptName = $MyInvocation.MyCommand.Name
 If ($CheckVersion) {Write-Host "SCRIPT NAME     : $ScriptName `nSCRIPT VERSION  : $ScriptVersion";exit}
