@@ -306,7 +306,7 @@ Foreach ($CurrentServer in $ServersConfigs) {
     }
 
     # Exchange ActiveSync aka EAS
-    $StatusMsg = "Setting EAS InternalURL to $($CurrentServer.EASInternalURL) and EAS ExternalURL to $($CurrentServer.EASExternalURL)"
+    $StatusMsg = "`"# Setting EAS InternalURL to $($CurrentServer.EASInternalURL) and EAS ExternalURL to $($CurrentServer.EASExternalURL)"
     # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
     LogMag $StatusMsg
     $EAScmd = "Get-ActiveSyncVirtualDirectory -Server $($CurrentServer.ServerName) -ADPropertiesOnly | Set-ActiveSyncVirtualDirectory"
@@ -362,7 +362,7 @@ Foreach ($CurrentServer in $ServersConfigs) {
     }
 
     # Exchange OfflineAddressBook 
-    $StatusMsg = "Setting OAB InternalURL to $($CurrentServer.OABInternalURL) and OAB ExternalURL to $($CurrentServer.OABExternalURL)"
+    $StatusMsg = "`"# Setting OAB InternalURL to $($CurrentServer.OABInternalURL) and OAB ExternalURL to $($CurrentServer.OABExternalURL)"
     # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
     LogMag $StatusMsg
     # $($CurrentServer.ServerName) | Get-OabVirtualDirectory -ADPropertiesOnly | Set-OabVirtualDirectory -InternalURL $CurrentServer.OABInternalURL -ExternalUrl $CurrentServer.OABExternalURL
@@ -406,7 +406,7 @@ Foreach ($CurrentServer in $ServersConfigs) {
     }
 
     # Outlook Web Access aka OWA
-    $StatusMsg = "Setting OWA InternalURL to $($CurrentServer.OWAInternalURL) and OWA ExternalURL to $($CurrentServer.OWAExternalURL)"
+    $StatusMsg = "`"# Setting OWA InternalURL to $($CurrentServer.OWAInternalURL) and OWA ExternalURL to $($CurrentServer.OWAExternalURL)"
     # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
     LogMag $StatusMsg
     $OWAcmd = "Get-OWAVirtualDirectory -Server $($CurrentServer.ServerName) -ADPropertiesOnly | Set-OWAVirtualDirectory"
@@ -448,7 +448,7 @@ Foreach ($CurrentServer in $ServersConfigs) {
     }
 
     # Outlook Web Access aka ECP
-    $StatusMsg = "Setting ECP InternalURL to $($CurrentServer.ECPInternalURL) and ECP ExternalURL to $($CurrentServer.ECPExternalURL)"
+    $StatusMsg = "`"# Setting ECP InternalURL to $($CurrentServer.ECPInternalURL) and ECP ExternalURL to $($CurrentServer.ECPExternalURL)"
     # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
     LogMag $StatusMsg
     $ECPcmd = "Get-ECPVirtualDirectory -Server $($CurrentServer.ServerName) -ADPropertiesOnly | Set-ECPVirtualDirectory"
@@ -470,7 +470,7 @@ Foreach ($CurrentServer in $ServersConfigs) {
     }
 
     # Exchange Exchange Web Services
-    $StatusMsg = "Setting EWS InternalURL to $($CurrentServer.EWSInternalURL) and EWS ExternalURL to $($CurrentServer.EWSExternalURL)"
+    $StatusMsg = "`"# Setting EWS InternalURL to $($CurrentServer.EWSInternalURL) and EWS ExternalURL to $($CurrentServer.EWSExternalURL)"
     # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
     LogMag $StatusMsg
     #$($CurrentServer.ServerName) | Get-WebServicesVirtualDirectory -ADPropertiesOnly | Set-WebServicesVirtualDirectory -InternalURL $CurrentServer.EWSInternalURL -ExternalUrl $CurrentServer.EWSExternalURL
@@ -493,7 +493,7 @@ Foreach ($CurrentServer in $ServersConfigs) {
     }
 
     # Outlook Anywhere aka OA
-    $StatusMsg = "Setting OutlookAnywhere InternalURL to $($CurrentServer."OutlookAnywhere-InternalHostName(NoneForE2010)") and OutlookAnywhere ExternalURL to $($CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)")"
+    $StatusMsg = "`"# Setting OutlookAnywhere InternalURL to $($CurrentServer."OutlookAnywhere-InternalHostName(NoneForE2010)") and OutlookAnywhere ExternalURL to $($CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)")"
     # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
     LogMag $StatusMsg
     $OAcmd = "Get-OutlookAnywhere -Server $($CurrentServer.ServerName) -ADPropertiesOnly | Set-OutlookAnywhere"
@@ -523,7 +523,7 @@ Foreach ($CurrentServer in $ServersConfigs) {
     }
 
     # Autodiscover
-    $StatusMsg = "Setting Autodiscover URI (SCP) to $($CurrentServer.AutodiscURI)"
+    $StatusMsg = "`"# Setting Autodiscover URI (SCP) to $($CurrentServer.AutodiscURI)"
     # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
     LogMag $StatusMsg
     If ($IsThereE2013orE2016){
