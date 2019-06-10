@@ -16,7 +16,7 @@ E2016-02,Version 15.1 (Build 1531.3),https://mail.canada.ca/Microsoft-Server-Act
 # Get-Help
 Use ```Get-Help .\Import-ExchangeURLs.ps1``` to get the script description and syntax
 Use ```Get-Help .\Import-ExchangeURLs.ps1 -Examples``` to get the script examples sections
-Use ```Get-Help .\Import-ExchangeURLs.ps1 -Examples``` to get the script's full help
+Use ```Get-Help .\Import-ExchangeURLs.ps1 -Full``` to get the script's full help like  below
 
 # Help dump
 I'm dumping temporarily the Import-ExchangeURLs.ps1 script help here for quick reference:
