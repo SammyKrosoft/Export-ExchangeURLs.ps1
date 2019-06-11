@@ -40,11 +40,11 @@
     Exports a CSV file, or the screen.
 
 .EXAMPLE
-.\Export-ExchangeURLsv2.ps1
+.\Export-ExchangeURLsv3.ps1
 Will export all URLs for all Exchange servers' virtual directories into a file named ExchangeURLs_Day_Date_Time.csv
 
 .EXAMPLE
-.\Export-ExchangeURLsv2.ps1 -DoNotExport
+.\Export-ExchangeURLsv3.ps1 -DoNotExport
 Will just print the results into the PowerShell console.
 
 .NOTES
