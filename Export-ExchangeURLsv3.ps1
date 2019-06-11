@@ -119,7 +119,7 @@ $ExchangeServers = Get-ExchangeServer *
 # 15.1 => Exchange 2016
 if ($E2010) {
 	Write-debug "E2010 switch on";
-	$ExchangeServers = $ExchangeServers | ? {$_.ServerRole -match "Client" -and $_.AdminDisplayVersion -match '14.'}
+	$ExchangeServers = $ExchangeServers | ? {$_.ServerRole -match "Client" -and $_.AdminDisplayVersion -match '14\.'}
 	If ($ExchangeServers -eq $null) {
 		$msg = "No Exchange 2010 servers found - Try -E2013 or E2016 or no switch ... exiting.";
 		Write-host $msg
@@ -130,7 +130,7 @@ if ($E2010) {
 	}
 }
 if ($E2013) {
-	Write-debug "E2013 switch on";$ExchangeServers = $ExchangeServers | ? {$_.AdminDisplayVersion -match '15.0'}
+	Write-debug "E2013 switch on";$ExchangeServers = $ExchangeServers | ? {$_.AdminDisplayVersion -match '15\.0'}
 	If ($ExchangeServers -eq $null) {
 		$msg = "No Exchange 2013 servers found - Try -E2013 or E2016 or no switch ... exiting.";
 		Write-host $msg
@@ -141,7 +141,7 @@ if ($E2013) {
 	}
 }
 if ($E2016) {
-	Write-debug "E2016 switch on";$ExchangeServers = $ExchangeServers | ? {$_.AdminDisplayVersion -match '15.1'}
+	Write-debug "E2016 switch on";$ExchangeServers = $ExchangeServers | ? {$_.AdminDisplayVersion -match '15\.1'}
 	If ($ExchangeServers -eq $null) {
 		$msg = "No Exchange 2016 servers found - Try -E2013 or E2016 or no switch ... exiting.";
 		Write-host $msg
