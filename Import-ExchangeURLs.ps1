@@ -530,18 +530,24 @@ Foreach ($CurrentServer in $ServersConfigs) {
     $StatusMsg = "# Setting Autodiscover URI (SCP) to $($CurrentServer.AutodiscURI)"
     # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
     LogMag $StatusMsg
-    If ($IsThereE2013orE2016){
-        LogGreen "# Using Get-ClientAccessService (assuming you run the script from an E2013/2016 EMS)"
-        $SCPcmd = "Set-ClientAccessService $($CurrentServer.ServerName) -AutoDiscoverServiceInternalUri $($CurrentServer.AutodiscURI)"
+    If (IsNotEmpty $CurrentServer.AutoDiscURI){
+        If ($IsThereE2013orE2016){
+            LogGreen "# Using Get-ClientAccessService (assuming you run the script from an E2013/2016 EMS)"
+            $SCPcmd = "Set-ClientAccessService $($CurrentServer.ServerName) -AutoDiscoverServiceInternalUri $($CurrentServer.AutodiscURI)"
+        } Else {
+            LogGreen "# Using Get-ClientAccessServer (assuming you run the script from an 2010 EMS)" -ForegroundColor Yellow
+            $SCPcmd = "Set-ClientAccessServer $($CurrentServer.ServerName) -AutoDiscoverServiceInternalUri $($CurrentServer.AutodiscURI)"
+        }
+        If (!$GenerateCommandsOnly){
+            Invoke-Expression $SCPcmd
+        } Else {
+            Write-Host $SCPcmd -BackgroundColor blue -ForegroundColor Yellow
+            
+        }
     } Else {
-        LogGreen "# Using Get-ClientAccessServer (assuming you run the script from an 2010 EMS)" -ForegroundColor Yellow
-        $SCPcmd = "Set-ClientAccessServer $($CurrentServer.ServerName) -AutoDiscoverServiceInternalUri $($CurrentServer.AutodiscURI)"
-    }
-    If (!$GenerateCommandsOnly){
-        Invoke-Expression $SCPcmd
-    } Else {
-        Write-Host $SCPcmd -BackgroundColor blue -ForegroundColor Yellow
-        
+        LogGreen "# The CSV input had a blank value for the Autodiscover URI - we won't set it to `$null, instead we just don't touch it"
+        LogMag "# Otherwise we can just replace that line of the script with `$SCPcmd = `"Set-ClientAccessService `$(`$CurrentServer.ServerName) -AutodiscoverServiceInternalURI `$(`$CurrentServer.AutodiscURI)`""
+        LogMag "# and Invoke-Expression `$SCPcmd without the -TestCSV switch, or just dump `$SCPcmd with the -TestCSV switch"
     }
 }
 
