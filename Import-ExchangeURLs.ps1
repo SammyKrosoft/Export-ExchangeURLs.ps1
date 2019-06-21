@@ -512,7 +512,7 @@ Foreach ($CurrentServer in $ServersConfigs) {
     }
     If (IsNotEmpty $CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)"){
         If ($CurrentServer.ServerVersion -match "15\."){
-        $OAcmd += " -ExternalHostName $($CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)") -ExternalClientsRequireSsl `$true"
+        $OAcmd += " -ExternalHostName $($CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)") -ExternalClientsRequireSsl `$true -DefaultAuthenticationMethod Ntlm"
         } Elseif ($CurrentServer.ServerVersion -match "14\."){
             # If Exchange 2010 server, then we set ExternalHostName, but without -ExternalClientsRequireSSL switch (that switch is for E2013/2016/2019 only)
             $OAcmd += " -ExternalHostName $($CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)")"
