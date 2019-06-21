@@ -100,15 +100,16 @@ $DebugPreference = "Stop"
 # Set Error Action to your needs
 $ErrorActionPreference = "Stop"
 #Script Version
-$ScriptVersion = "1.3"
+$ScriptVersion = "1.4"
 <# Version changes
-v0.1 : first script version
-v0.1 -> v1 : finalized version. To be fixed next : output text when setting a property to "$null". This is cosmetic minor change
-that does not impact the script purpose and actions.
+v1.4 : changed Get-ClientAccessService only for Exchange 2016 (NOT for Exchange 2013 - because E2013 still can have CAS Server separated, not E2016, hence change of cmdlet name)
+v1.3: renamed -TestCSV switch to -GenerateCommandsOnly
+v1.1 -> v1.2 : added # character on output text to enable users to use generated scripts when using -GenerateCommandsOnly instead of letting the script to set all URLs
 v1.0-> v1.1 : fixed Set-OutlookAnywhere, added -Internal/ExternalClientsRequireSSL when server is Exchange 2013/2016, added usage of IsNotEmpty function
 instead of comparison with $null as sometimes blank CSV cells is reported as empty string, sometimes as $null
-v1.1 -> v1.2 : added # character on output text to enable users to use generated scripts when using -GenerateCommandsOnly instead of letting the script to set all URLs
-v1.3: renamed -TestCSV switch to -GenerateCommandsOnly
+v0.1 -> v1 : finalized version. To be fixed next : output text when setting a property to "$null". This is cosmetic minor change
+that does not impact the script purpose and actions.
+v0.1 : first script version
 #>
 $ScriptName = $MyInvocation.MyCommand.Name
 If ($CheckVersion) {Write-Host "SCRIPT NAME     : $ScriptName `nSCRIPT VERSION  : $ScriptVersion";exit}
@@ -121,7 +122,7 @@ $ScriptLog = "$ScriptPath\$($ScriptName)-$(Get-Date -Format 'dd-MMMM-yyyy-hh-mm-
 <# ---------------------------- /SCRIPT_HEADER ---------------------------- #>
 <# -------------------------- DECLARATIONS -------------------------- #>
 # $ErrorActionPreference = Continue
-$IsThereE2013orE2016 = $false
+$IsThereE2016 = $false
 <# /DECLARATIONS #>
 <# -------------------------- FUNCTIONS -------------------------- #>
 function IsNotEmpty($Param){
@@ -273,18 +274,18 @@ If($GenerateCommandsOnly){
 #BOOKMARK
 # exit
 
-$test = ($ServersConfigs | % {$_.ServerVersion -match "15\."}) -join ";"
+$test = ($ServersConfigs | % {$_.ServerVersion -match "15\.1"}) -join ";"
 
 If ($test -match "$true"){
-    $IsThereE2013orE2016 = $True
+    $IsThereE2016 = $True
 } Else {
-    $IsThereE2013orE2016 = $false
+    $IsThereE2016 = $false
 }
 
-If ($IsThereE2013orE2016){
-    Write-Host "There are some E2013/E2016 in the list... Make sure you run this tool from E2013/2016 EMS ! Using Get-ClientAccessServices instead of Get-ClientAccessServer" -BackgroundColor darkblue -fore red
+If ($IsThereE2016){
+    Write-Host "There are some E2016 in the list... Make sure you run this tool from 2016 EMS ! Using Get-ClientAccessServices instead of Get-ClientAccessServer" -BackgroundColor darkblue -fore red
 } Else {
-    Write-Host "No E2013/2016 in the list ... using Get-ClientAccessServer"
+    Write-Host "No 2016 in the list ... using Get-ClientAccessServer"
 }
 
 # $ServersConfigs = import-csv $inputFile
@@ -531,8 +532,8 @@ Foreach ($CurrentServer in $ServersConfigs) {
     # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
     LogMag $StatusMsg
     If (IsNotEmpty $CurrentServer.AutoDiscURI){
-        If ($IsThereE2013orE2016){
-            LogGreen "# Using Get-ClientAccessService (assuming you run the script from an E2013/2016 EMS)"
+        If ($IsThereE2016){
+            LogGreen "# Using Get-ClientAccessService (assuming you run the script from an 2016 EMS)"
             $SCPcmd = "Set-ClientAccessService $($CurrentServer.ServerName) -AutoDiscoverServiceInternalUri $($CurrentServer.AutodiscURI)"
         } Else {
             LogGreen "# Using Get-ClientAccessServer (assuming you run the script from an 2010 EMS)" -ForegroundColor Yellow
