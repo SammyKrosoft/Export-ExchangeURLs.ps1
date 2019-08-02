@@ -1,3 +1,15 @@
+<#PSScriptInfo
+
+.VERSION 1.4
+
+.GUID 0a1b89dc-e2b3-4e34-b1ad-e86ca7f6833d
+
+.AUTHOR SammyKrosoft
+
+.COMPANYNAME SammykroSoft
+
+#> 
+
 <#
 .SYNOPSIS
     This script will help you set up your Exchange Virtual Directories, including AutoDiscoverfrom a CSV file
