@@ -8,10 +8,8 @@
 
 .COMPANYNAME SammykroSoft
 
-#> 
-
-
-
+#>
+ 
 <#
 
 .SYNOPSIS
