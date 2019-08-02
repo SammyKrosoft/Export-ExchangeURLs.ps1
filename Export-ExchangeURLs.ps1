@@ -1,4 +1,9 @@
-<#
+<#PSScriptInfo
+
+.AUTHOR SammyKrosoft
+
+.COMPANYNAME SammykroSoft
+
 .SYNOPSIS
 	This script dumps the URLs of all your Exchange servers in a CSV file
 	
@@ -50,8 +55,13 @@ Will just print the results into the PowerShell console.
 .NOTES
 V3 -> adding switches to select which Exchange version to check (not finished yet)
 
+.VERSION 3.0
+
+.GUID 0a1b89dc-e2b3-4e34-b1ad-e86ca7f6833d
+
 .LINK
-    https://github.com/SammyKrosoft
+	https://github.com/SammyKrosoft
+
 #>
 [CmdletBinding(DefaultParameterSetName = "E2010")]
 Param(
