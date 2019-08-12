@@ -209,6 +209,9 @@ foreach( $Server in $Servers)
 	$ECP = Get-EcpVirtualDirectory -Server $Server -ADPropertiesOnly | Select Name,InternalURL,externalURL
 	#testing if there is an Exchange 2013/2016 in the $ExchangeServers collection - If TRUE then use Get-ClientAccessService, ELSE user Get-ClientAccessServer
 	$test = ($ExchangeServers | % {$_.AdminDisplayVersion -match "15."}) -join ";"
+
+	$TestE2016 = ($ExchangeServers | % {$_.AdminDisplayVersion -match "15\.1"}) -join ";"
+
 	If ($test -match "$true"){
 		$AutoDisc = get-ClientAccessService $($Server.Name) | Select name,identity,AutodiscoverServiceInternalUri
 	} Else {
