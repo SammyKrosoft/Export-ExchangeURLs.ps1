@@ -208,11 +208,10 @@ foreach( $Server in $Servers)
 	$OWA = Get-OwaVirtualDirectory -Server $Server -ADPropertiesOnly | Select Name,InternalURL,externalURL
 	$ECP = Get-EcpVirtualDirectory -Server $Server -ADPropertiesOnly | Select Name,InternalURL,externalURL
 	#testing if there is an Exchange 2013/2016 in the $ExchangeServers collection - If TRUE then use Get-ClientAccessService, ELSE user Get-ClientAccessServer
-	$test = ($ExchangeServers | % {$_.AdminDisplayVersion -match "15."}) -join ";"
 
 	$TestE2016 = ($ExchangeServers | % {$_.AdminDisplayVersion -match "15\.1"}) -join ";"
 
-	If ($test -match "$true"){
+	If ($TestE2016 -match "$true"){
 		$AutoDisc = get-ClientAccessService $($Server.Name) | Select name,identity,AutodiscoverServiceInternalUri
 	} Else {
 		$AutoDisc = get-ClientAccessServer $($Server.Name) | Select name,identity,AutodiscoverServiceInternalUri
