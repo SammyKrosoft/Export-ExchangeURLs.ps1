@@ -1,6 +1,6 @@
 <#PSScriptInfo
 
-.VERSION 3.0
+.VERSION 3.1
 
 .GUID 0a1b89dc-e2b3-4e34-b1ad-e86ca7f6833d
 
@@ -89,8 +89,9 @@ $DebugPreference = "Continue"
 # Set Error Action to your needs
 $ErrorActionPreference = "SilentlyContinue"
 #Script Version
-$ScriptVersion = "3"
+$ScriptVersion = "3.1"
 <# Version History
+v3.1 : fixed Exchange version switches, Get-ClientAccessSErvice is for E2016 only, NOT E2013.
 v1.0 -> v2
 Added export of Outlook Anywhere with External Hostname (E2010, E2013, E2016) and Internal Hostname (not existing in E2010)
 Fixed output file name
