@@ -1,6 +1,6 @@
 <#PSScriptInfo
 
-.VERSION 1.5
+.VERSION 1.6.0
 
 .GUID 0a1b89dc-e2b3-4e34-b1ad-e86ca7f6833d
 
@@ -112,8 +112,9 @@ $DebugPreference = "Stop"
 # Set Error Action to your needs
 $ErrorActionPreference = "Stop"
 #Script Version
-$ScriptVersion = "1.4"
+$ScriptVersion = "1.6.0"
 <# Version changes
+v1.6.0 : added MAPI vdir update
 v1.5 : Fixed typo in ExternalURL fields (was ExernalURL without the "t")
 v1.4 : changed Get-ClientAccessService only for Exchange 2016 (NOT for Exchange 2013 - because E2013 still can have CAS Server separated, not E2016, hence change of cmdlet name)
 v1.3: renamed -TestCSV switch to -GenerateCommandsOnly
@@ -443,16 +444,16 @@ Foreach ($CurrentServer in $ServersConfigs) {
     } Else {
         $OWAcmd += " -InternalURL `$null"
     }
-        #region #### VALUE TEST ROUTINE FOR DEBUG ######
-        If ($DebugVerbose){
-            LogGreen "Status of OWA InternalURL: "
-            LogGreen "Value: $($CurrentServer.OWAInternalURL)"
-            LogGreen "Is it blank ?"
-            LogGreen "$($CurrentServer.OWAInternalURL -eq """")"
-            LogGreen "Is it `$null ?"
-            LogGreen "$($CurrentServer.OWAInternalURL -eq $null)"
-        }
-        #endregion #### END OF TEST ROUTING FOR DEBUG ######
+    #region #### VALUE TEST ROUTINE FOR DEBUG ######
+    If ($DebugVerbose){
+        LogGreen "Status of OWA ExternalURL: "
+        LogGreen "Value: $($CurrentServer.OWAExternalURL)"
+        LogGreen "Is it blank ?"
+        LogGreen "$($CurrentServer.OWAExternalURL -eq """")"
+        LogGreen "Is it `$null ?"
+        LogGreen "$($CurrentServer.OWAExternalURL -eq $null)"
+    }
+    #endregion #### END OF TEST ROUTING FOR DEBUG ######
     If (IsNotEmpty $CurrentServer.OWAExternalURL){
         $OWAcmd += " -ExternalURL $($CurrentServer.OWAExternalURL)"
     } Else {
@@ -563,6 +564,53 @@ Foreach ($CurrentServer in $ServersConfigs) {
         LogMag "# Otherwise we can just replace that line of the script with `$SCPcmd = `"Set-ClientAccessService `$(`$CurrentServer.ServerName) -AutodiscoverServiceInternalURI `$(`$CurrentServer.AutodiscURI)`""
         LogMag "# and Invoke-Expression `$SCPcmd without the -TestCSV switch, or just dump `$SCPcmd with the -TestCSV switch"
     }
+
+    # MAPI over HTTP
+   If ($CurrentServer.ServerVersion -match "15\.") {
+        $StatusMsg = "# Setting MAPI InternalURL to $($CurrentServer.MAPIInternalURL) and MAPI ExternalURL to $($CurrentServer.MAPIExternalURL)"
+        # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
+        LogMag $StatusMsg
+        $MAPIcmd = "Get-MAPIVirtualDirectory -Server $($CurrentServer.ServerName) -ADPropertiesOnly | Set-MAPIVirtualDirectory"
+        #region #### VALUE TEST ROUTINE FOR DEBUG ######
+        If ($DebugVerbose){
+            LogGreen "Status of MAPI InternalURL: "
+            LogGreen "Value: $($CurrentServer.MAPIInternalURL)"
+            LogGreen "Is it blank ?"
+            LogGreen "$($CurrentServer.MAPIInternalURL -eq """")"
+            LogGreen "Is it `$null ?"
+            LogGreen "$($CurrentServer.MAPIInternalURL -eq $null)"
+        }
+        #endregion #### END OF TEST ROUTING FOR DEBUG ######
+        If (IsNotEmpty $CurrentServer.MAPIInternalURL){
+            $MAPIcmd += " -InternalURL $($CurrentServer.MAPIInternalURL)"
+        } Else {
+            $MAPIcmd += " -InternalURL `$null"
+        }
+        #region #### VALUE TEST ROUTINE FOR DEBUG ######
+        If ($DebugVerbose){
+            LogGreen "Status of MAPI ExternalURL: "
+            LogGreen "Value: $($CurrentServer.MAPIExternalURL)"
+            LogGreen "Is it blank ?"
+            LogGreen "$($CurrentServer.MAPIExternalURL -eq """")"
+            LogGreen "Is it `$null ?"
+            LogGreen "$($CurrentServer.MAPIExternalURL -eq $null)"
+        }
+        #endregion #### END OF TEST ROUTING FOR DEBUG ######
+        If (IsNotEmpty $CurrentServer.MAPIExternalURL){
+            $MAPIcmd += " -ExternalURL $($CurrentServer.MAPIExternalURL)"
+        } Else {
+            $MAPIcmd += " -ExternalURL `$null"
+        }
+        # If we have the -GenerateCommandsOnly switch enabled, we just print the generated command line. Otherwise, we run it using Invoke-Expression...
+        If (!$GenerateCommandsOnly){
+            Invoke-Expression $MAPIcmd
+        } Else {
+            Write-Host $MAPIcmd -BackgroundColor blue -ForegroundColor Yellow
+        }
+    } Else {
+        Write-Host "Not an Exhcange 2013 or 2016 server - skipping MAPI over HTTP setup ;-)"
+    }
+
 }
 
 <# /EXECUTIONS #>
