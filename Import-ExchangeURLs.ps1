@@ -1,6 +1,6 @@
 <#PSScriptInfo
 
-.VERSION 1.4
+.VERSION 1.5
 
 .GUID 0a1b89dc-e2b3-4e34-b1ad-e86ca7f6833d
 
@@ -20,9 +20,9 @@
     This script takes in input a CSV file issued form an Export-ExchangeURLsv3.ps1 script or a
     CSV file containing the following headers:
     
-    ServerName,ServerVersion,EASInternalURL,EASExternalURL,OABInternalURL,OABExernalURL,
-    OWAInternalURL,OWAExernalURL,ECPInternalURL,ECPExernalURL,AutoDiscName,AutoDiscURI,
-    EWSInternalURL,EWSExernalURL,OutlookAnywhere-InternalHostName(NoneForE2010),
+    ServerName,ServerVersion,EASInternalURL,EASExternalURL,OABInternalURL,OABExternalURL,
+    OWAInternalURL,OWAExternalURL,ECPInternalURL,ECPExternalURL,AutoDiscName,AutoDiscURI,
+    EWSInternalURL,EWSExternalURL,OutlookAnywhere-InternalHostName(NoneForE2010),
     OutlookAnywhere-ExternalHostNAme(E2010+)
     
     IMPORTANT NOTE: a blank value will set the corresponding attribute to $null
@@ -114,6 +114,7 @@ $ErrorActionPreference = "Stop"
 #Script Version
 $ScriptVersion = "1.4"
 <# Version changes
+v1.5 : Fixed typo in ExternalURL fields (was ExernalURL without the "t")
 v1.4 : changed Get-ClientAccessService only for Exchange 2016 (NOT for Exchange 2013 - because E2013 still can have CAS Server separated, not E2016, hence change of cmdlet name)
 v1.3: renamed -TestCSV switch to -GenerateCommandsOnly
 v1.1 -> v1.2 : added # character on output text to enable users to use generated scripts when using -GenerateCommandsOnly instead of letting the script to set all URLs
@@ -271,7 +272,7 @@ function import-ValidCSV {
 <# -------------------------- EXECUTIONS -------------------------- #>
 If (!($GenerateCommandsOnly)){Test-ExchTools}
 
-$RequiredColumnsCollection = "ServerName","ServerVersion","EASInternalURL","EASExternalURL","OABInternalURL","OABExernalURL","OWAInternalURL","OWAExernalURL","ECPInternalURL","ECPExernalURL","AutoDiscURI","EWSInternalURL","EWSExernalURL","OutlookAnywhere-InternalHostName(NoneForE2010)","OutlookAnywhere-ExternalHostNAme(E2010+)"
+$RequiredColumnsCollection = "ServerName","ServerVersion","EASInternalURL","EASExternalURL","OABInternalURL","OABExternalURL","OWAInternalURL","OWAExternalURL","ECPInternalURL","ECPExternalURL","AutoDiscURI","EWSInternalURL","EWSExternalURL","OutlookAnywhere-InternalHostName(NoneForE2010)","OutlookAnywhere-ExternalHostNAme(E2010+)"
 
 # $ServerConfig = Import-Csv $InputCSV
 
