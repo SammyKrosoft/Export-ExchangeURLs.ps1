@@ -1,6 +1,6 @@
 <#PSScriptInfo
 
-.VERSION 3.1
+.VERSION 3.2
 
 .GUID 0a1b89dc-e2b3-4e34-b1ad-e86ca7f6833d
 
@@ -53,14 +53,15 @@
     Exports a CSV file, or the screen.
 
 .EXAMPLE
-.\Export-ExchangeURLsv3.ps1
+.\Export-ExchangeURLs.ps1
 Will export all URLs for all Exchange servers' virtual directories into a file named ExchangeURLs_Day_Date_Time.csv
 
 .EXAMPLE
-.\Export-ExchangeURLsv3.ps1 -DoNotExport
+.\Export-ExchangeURLs.ps1 -DoNotExport
 Will just print the results into the PowerShell console.
 
 .NOTES
+V3.2 -> Fixed mistake : Typo in OWAexternalURL, ECP and EWS, and OAB ... fixed
 V3 -> adding switches to select which Exchange version to check (not finished yet)
 
 .LINK
@@ -89,8 +90,9 @@ $DebugPreference = "Continue"
 # Set Error Action to your needs
 $ErrorActionPreference = "SilentlyContinue"
 #Script Version
-$ScriptVersion = "3.1"
+$ScriptVersion = "3.2"
 <# Version History
+v3.2 - See Notes
 v3.1 : fixed Exchange version switches, Get-ClientAccessSErvice is for E2016 only, NOT E2013.
 v1.0 -> v2
 Added export of Outlook Anywhere with External Hostname (E2010, E2013, E2016) and Internal Hostname (not existing in E2010)
@@ -231,7 +233,7 @@ foreach( $Server in $Servers)
 	#Get something above like the $Service = Get-whatever -Server
 	#$Obj | Add-Member -MemberType NoteProperty -Name "ServiceToDump-vDirNAme" -Value $ServiceToDump.Name
 	#$Obj | Add-Member -MemberType NoteProperty -Name "ServiceToDump-InternalURL" -Value $ServiceToDump.InternalURL
-	#$Obj | Add-Member -MemberType NoteProperty -Name "ServiceToDump-ExernalURL" -Value $ServiceToDump.ExternalURL	
+	#$Obj | Add-Member -MemberType NoteProperty -Name "ServiceToDump-ExternalURL" -Value $ServiceToDump.ExternalURL	
 		
 	$Obj | Add-Member -MemberType NoteProperty -Name "ServerName" -Value $Server.Name
 	$Obj | Add-Member -MemberType NoteProperty -Name "ServerVersion" -Value $Server.AdminDisplayVersion
@@ -240,18 +242,18 @@ foreach( $Server in $Servers)
 	$Obj | Add-Member -MemberType NoteProperty -Name "EASExternalURL" -Value $EAS.ExternalURL
 	# $Obj | Add-Member -MemberType NoteProperty -Name "OABName" -Value $OAB.Name
 	$Obj | Add-Member -MemberType NoteProperty -Name "OABInternalURL" -Value $OAB.InternalURL
-	$Obj | Add-Member -MemberType NoteProperty -Name "OABExernalURL" -Value $OAB.ExternalURL
+	$Obj | Add-Member -MemberType NoteProperty -Name "OABExternalURL" -Value $OAB.ExternalURL
 	#$Obj | Add-Member -MemberType NoteProperty -Name "OWAName" -Value $OWA.Name
 	$Obj | Add-Member -MemberType NoteProperty -Name "OWAInternalURL" -Value $OWA.InternalURL
-	$Obj | Add-Member -MemberType NoteProperty -Name "OWAExernalURL" -Value $OWA.ExternalURL
+	$Obj | Add-Member -MemberType NoteProperty -Name "OWAExternalURL" -Value $OWA.ExternalURL
 	# $Obj | Add-Member -MemberType NoteProperty -Name "ECPName" -Value $ECP.Name
 	$Obj | Add-Member -MemberType NoteProperty -Name "ECPInternalURL" -Value $ECP.InternalURL
-	$Obj | Add-Member -MemberType NoteProperty -Name "ECPExernalURL" -Value $ECP.ExternalURL	
+	$Obj | Add-Member -MemberType NoteProperty -Name "ECPExternalURL" -Value $ECP.ExternalURL	
 	$Obj | Add-Member -MemberType NoteProperty -Name "AutoDiscName" -Value $AutoDisc.Name
 	$Obj | Add-Member -MemberType NoteProperty -Name "AutoDiscURI" -Value $AutoDisc.AutodiscoverServiceInternalURI
 	# $Obj | Add-Member -MemberType NoteProperty -Name "EWSName" -Value $EWS.Name
 	$Obj | Add-Member -MemberType NoteProperty -Name "EWSInternalURL" -Value $EWS.InternalURL
-    $Obj | Add-Member -MemberType NoteProperty -Name "EWSExernalURL" -Value $EWS.ExternalURL
+    $Obj | Add-Member -MemberType NoteProperty -Name "EWSExternalURL" -Value $EWS.ExternalURL
     $Obj | Add-Member -MemberType NoteProperty -Name "OutlookAnywhere-InternalHostName(NoneForE2010)" -Value $OA.InternalHostName
     $Obj | Add-Member -MemberType NoteProperty -Name "OutlookAnywhere-ExternalHostNAme(E2010+)" -Value $OA.ExternalHostName
 		
