@@ -566,51 +566,52 @@ Foreach ($CurrentServer in $ServersConfigs) {
     }
 
     # MAPI over HTTP
-   If ($CurrentServer.ServerVersion -match "15\.") {
-        $StatusMsg = "# Setting MAPI InternalURL to $($CurrentServer.MAPIInternalURL) and MAPI ExternalURL to $($CurrentServer.MAPIExternalURL)"
-        # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
-        LogMag $StatusMsg
-        $MAPIcmd = "Get-MAPIVirtualDirectory -Server $($CurrentServer.ServerName) -ADPropertiesOnly | Set-MAPIVirtualDirectory"
-        #region #### VALUE TEST ROUTINE FOR DEBUG ######
-        If ($DebugVerbose){
-            LogGreen "Status of MAPI InternalURL: "
-            LogGreen "Value: $($CurrentServer.MAPIInternalURL)"
-            LogGreen "Is it blank ?"
-            LogGreen "$($CurrentServer.MAPIInternalURL -eq """")"
-            LogGreen "Is it `$null ?"
-            LogGreen "$($CurrentServer.MAPIInternalURL -eq $null)"
-        }
-        #endregion #### END OF TEST ROUTING FOR DEBUG ######
-        If (IsNotEmpty $CurrentServer.MAPIInternalURL){
-            $MAPIcmd += " -InternalURL $($CurrentServer.MAPIInternalURL)"
+    If (IsNotEmpty $($CurrentServer.MAPIInternalURL)){
+        If ($CurrentServer.ServerVersion -match "15\.") {
+            $StatusMsg = "# Setting MAPI InternalURL to $($CurrentServer.MAPIInternalURL) and MAPI ExternalURL to $($CurrentServer.MAPIExternalURL)"
+            # Write-Host $StatusMsg -BackgroundColor Blue -ForegroundColor Red
+            LogMag $StatusMsg
+            $MAPIcmd = "Get-MAPIVirtualDirectory -Server $($CurrentServer.ServerName) -ADPropertiesOnly | Set-MAPIVirtualDirectory"
+            #region #### VALUE TEST ROUTINE FOR DEBUG ######
+            If ($DebugVerbose){
+                LogGreen "Status of MAPI InternalURL: "
+                LogGreen "Value: $($CurrentServer.MAPIInternalURL)"
+                LogGreen "Is it blank ?"
+                LogGreen "$($CurrentServer.MAPIInternalURL -eq """")"
+                LogGreen "Is it `$null ?"
+                LogGreen "$($CurrentServer.MAPIInternalURL -eq $null)"
+            }
+            #endregion #### END OF TEST ROUTING FOR DEBUG ######
+            If (IsNotEmpty $CurrentServer.MAPIInternalURL){
+                $MAPIcmd += " -InternalURL $($CurrentServer.MAPIInternalURL)"
+            } Else {
+                $MAPIcmd += " -InternalURL `$null"
+            }
+            #region #### VALUE TEST ROUTINE FOR DEBUG ######
+            If ($DebugVerbose){
+                LogGreen "Status of MAPI ExternalURL: "
+                LogGreen "Value: $($CurrentServer.MAPIExternalURL)"
+                LogGreen "Is it blank ?"
+                LogGreen "$($CurrentServer.MAPIExternalURL -eq """")"
+                LogGreen "Is it `$null ?"
+                LogGreen "$($CurrentServer.MAPIExternalURL -eq $null)"
+            }
+            #endregion #### END OF TEST ROUTING FOR DEBUG ######
+            If (IsNotEmpty $CurrentServer.MAPIExternalURL){
+                $MAPIcmd += " -ExternalURL $($CurrentServer.MAPIExternalURL)"
+            } Else {
+                $MAPIcmd += " -ExternalURL `$null"
+            }
+            # If we have the -GenerateCommandsOnly switch enabled, we just print the generated command line. Otherwise, we run it using Invoke-Expression...
+            If (!$GenerateCommandsOnly){
+                Invoke-Expression $MAPIcmd
+            } Else {
+                Write-Host $MAPIcmd -BackgroundColor blue -ForegroundColor Yellow
+            }
         } Else {
-            $MAPIcmd += " -InternalURL `$null"
+            Write-Host "Not an Exchange 2013 or 2016 server - skipping MAPI over HTTP setup ;-)"
         }
-        #region #### VALUE TEST ROUTINE FOR DEBUG ######
-        If ($DebugVerbose){
-            LogGreen "Status of MAPI ExternalURL: "
-            LogGreen "Value: $($CurrentServer.MAPIExternalURL)"
-            LogGreen "Is it blank ?"
-            LogGreen "$($CurrentServer.MAPIExternalURL -eq """")"
-            LogGreen "Is it `$null ?"
-            LogGreen "$($CurrentServer.MAPIExternalURL -eq $null)"
-        }
-        #endregion #### END OF TEST ROUTING FOR DEBUG ######
-        If (IsNotEmpty $CurrentServer.MAPIExternalURL){
-            $MAPIcmd += " -ExternalURL $($CurrentServer.MAPIExternalURL)"
-        } Else {
-            $MAPIcmd += " -ExternalURL `$null"
-        }
-        # If we have the -GenerateCommandsOnly switch enabled, we just print the generated command line. Otherwise, we run it using Invoke-Expression...
-        If (!$GenerateCommandsOnly){
-            Invoke-Expression $MAPIcmd
-        } Else {
-            Write-Host $MAPIcmd -BackgroundColor blue -ForegroundColor Yellow
-        }
-    } Else {
-        Write-Host "Not an Exhcange 2013 or 2016 server - skipping MAPI over HTTP setup ;-)"
     }
-
 }
 
 <# /EXECUTIONS #>
