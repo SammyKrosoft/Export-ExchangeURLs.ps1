@@ -1,12 +1,12 @@
 <#PSScriptInfo
 
-.VERSION 3.3
+.VERSION 3.3.1
 
 .GUID 0a1b89dc-e2b3-4e34-b1ad-e86ca7f6833d
 
-.AUTHOR SammyKrosoft
+.AUTHOR Sam Drey
 
-.COMPANYNAME SammykroSoft
+.COMPANYNAME Microsoft Canada
 
 #>
  
@@ -90,8 +90,9 @@ $DebugPreference = "Continue"
 # Set Error Action to your needs
 $ErrorActionPreference = "SilentlyContinue"
 #Script Version
-$ScriptVersion = "3.3"
+$ScriptVersion = "3.3.1"
 <# Version History
+v3.3.1 - changed author's name to Sam Drey and current company
 v3.3 - added MAPI URLs export
 v3.2 - See Notes
 v3.1 : fixed Exchange version switches, Get-ClientAccessSErvice is for E2016 only, NOT E2013.
