@@ -1,6 +1,6 @@
 <#PSScriptInfo
 
-.VERSION 3.3.2
+.VERSION 3.3.3
 
 .GUID 0a1b89dc-e2b3-4e34-b1ad-e86ca7f6833d
 
@@ -112,8 +112,9 @@ $DebugPreference = "Stop"
 # Set Error Action to your needs
 $ErrorActionPreference = "Stop"
 #Script Version
-$ScriptVersion = "3.3.2"
+$ScriptVersion = "3.3.3"
 <# Version changes
+v3.3.3 - inc version to match Export-ExchangeURLs.ps1 (fix -ADPropertiesOnly)
 v3.3.2 - jumped version to match and sync with Export-ExchangeURLs.ps1
 v1.6.1 - changed author to Sam Drey and current company
 v1.6.0 : added MAPI vdir update
