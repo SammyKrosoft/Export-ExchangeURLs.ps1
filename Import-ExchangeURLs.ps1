@@ -1,12 +1,12 @@
 <#PSScriptInfo
 
-.VERSION 1.6.0
+.VERSION 3.3.2
 
 .GUID 0a1b89dc-e2b3-4e34-b1ad-e86ca7f6833d
 
-.AUTHOR SammyKrosoft
+.AUTHOR Sam Drey
 
-.COMPANYNAME SammykroSoft
+.COMPANYNAME Microsoft Canada
 
 #> 
 
@@ -82,7 +82,7 @@ output additional details about the actions, comparisons, and some other stuff t
 
 .NOTES
 Again, it's strongly recommended to:
-#1 - Export your current URLs and Autodiscover settings using the Export-ExchangeURLsv3.ps1 script to be able to easily roll back
+#1 - Export your current URLs and Autodiscover settings using the Export-ExchangeURLs.ps1 script to be able to easily roll back
 if need be, and keep the original CSV export. Create a copy of that exported CSV that we will modify and use that modified copy
 with the script to set the Exchange vDir properties.
 #2 - Always run the Import-ExchangeURLs.ps1 script with the -GenerateCommandsOnly first, and review all the command lines that the script will
@@ -112,8 +112,10 @@ $DebugPreference = "Stop"
 # Set Error Action to your needs
 $ErrorActionPreference = "Stop"
 #Script Version
-$ScriptVersion = "1.6.0"
+$ScriptVersion = "3.3.2"
 <# Version changes
+v3.3.2 - jumped version to match and sync with Export-ExchangeURLs.ps1
+v1.6.1 - changed author to Sam Drey and current company
 v1.6.0 : added MAPI vdir update
 v1.5 : Fixed typo in ExternalURL fields (was ExernalURL without the "t")
 v1.4 : changed Get-ClientAccessService only for Exchange 2016 (NOT for Exchange 2013 - because E2013 still can have CAS Server separated, not E2016, hence change of cmdlet name)

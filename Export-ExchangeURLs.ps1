@@ -1,6 +1,6 @@
 <#PSScriptInfo
 
-.VERSION 3.3.1
+.VERSION 3.3.3
 
 .GUID 0a1b89dc-e2b3-4e34-b1ad-e86ca7f6833d
 
@@ -90,8 +90,10 @@ $DebugPreference = "Continue"
 # Set Error Action to your needs
 $ErrorActionPreference = "SilentlyContinue"
 #Script Version
-$ScriptVersion = "3.3.1"
+$ScriptVersion = '3.3.3'
 <# Version History
+v3.3.3 - added -ADPropertiesOnly for Get-MAPIVirtualDirectory
+v3.3.2 - removed "AutoDiscName" column as it's the same value as "ServerName"
 v3.3.1 - changed author's name to Sam Drey and current company
 v3.3 - added MAPI URLs export
 v3.2 - See Notes
@@ -217,16 +219,16 @@ foreach( $Server in $Servers)
 	$TestE2016 = ($ExchangeServers | % {$_.AdminDisplayVersion -match "15\.1"}) -join ";"
 
 	If ($TestE2016 -match "$true"){
-		$AutoDisc = get-ClientAccessService $($Server.Name) | Select name,identity,AutodiscoverServiceInternalUri
+		$AutoDisc = get-ClientAccessService $($Server.Name) | Select identity,AutodiscoverServiceInternalUri
 	} Else {
-		$AutoDisc = get-ClientAccessServer $($Server.Name) | Select name,identity,AutodiscoverServiceInternalUri
+		$AutoDisc = get-ClientAccessServer $($Server.Name) | Select identity,AutodiscoverServiceInternalUri
 	}
 	
 	$EWS = Get-WebServicesVirtualDirectory -Server $Server -ADPropertiesOnly | Select NAme,identity,internalURL,externalURL
     $OA = Get-OutlookAnywhere -Server $Server -ADPropertiesOnly | Select Name,InternalHostName, ExternalHostName
     #If you want to dump more things, use the below line as a sample:
 	#$ServiceToDump = Get-Whatever -Server $Server | Select Property1, property2, ....   <- don't need the "Select property", you can omit this, it will just get all attributes...
-	$MAPI = Get-MAPIVirtualDirectory -Server $Server | Select Name, InternalURL, ExternalURL # ....   <- don't need the "Select property", you can omit this, it will just get all attributes...
+	$MAPI = Get-MAPIVirtualDirectory -Server $Server -ADPropertiesOnly | Select Name, InternalURL, ExternalURL # ....   <- don't need the "Select property", you can omit this, it will just get all attributes...
 
    	#Initializing a new Powershell object to store our discovered properties
     $Obj = New-Object PSObject
@@ -252,7 +254,6 @@ foreach( $Server in $Servers)
 	# $Obj | Add-Member -MemberType NoteProperty -Name "ECPName" -Value $ECP.Name
 	$Obj | Add-Member -MemberType NoteProperty -Name "ECPInternalURL" -Value $ECP.InternalURL
 	$Obj | Add-Member -MemberType NoteProperty -Name "ECPExternalURL" -Value $ECP.ExternalURL	
-	$Obj | Add-Member -MemberType NoteProperty -Name "AutoDiscName" -Value $AutoDisc.Name
 	$Obj | Add-Member -MemberType NoteProperty -Name "AutoDiscURI" -Value $AutoDisc.AutodiscoverServiceInternalURI
 	# $Obj | Add-Member -MemberType NoteProperty -Name "EWSName" -Value $EWS.Name
 	$Obj | Add-Member -MemberType NoteProperty -Name "EWSInternalURL" -Value $EWS.InternalURL
