@@ -90,8 +90,9 @@ $DebugPreference = "Continue"
 # Set Error Action to your needs
 $ErrorActionPreference = "SilentlyContinue"
 #Script Version
-$ScriptVersion = '3.3.3'
+$ScriptVersion = '3.3.4'
 <# Version History
+v3.3.4 - added export server Site information as ServerSite
 v3.3.3 - added -ADPropertiesOnly for Get-MAPIVirtualDirectory
 v3.3.2 - removed "AutoDiscName" column as it's the same value as "ServerName"
 v3.3.1 - changed author's name to Sam Drey and current company
@@ -241,6 +242,7 @@ foreach( $Server in $Servers)
 	#$Obj | Add-Member -MemberType NoteProperty -Name "ServiceToDump-ExternalURL" -Value $ServiceToDump.ExternalURL	
 		
 	$Obj | Add-Member -MemberType NoteProperty -Name "ServerName" -Value $Server.Name
+	$Obj | Add-Member -MemberType NoteProperty -Name "ServerSite" -Value $Server.Site
 	$Obj | Add-Member -MemberType NoteProperty -Name "ServerVersion" -Value $Server.AdminDisplayVersion
 	#$Obj | Add-Member -MemberType NoteProperty -Name "EASName" -Value $EAS.Name
     $Obj | Add-Member -MemberType NoteProperty -Name "EASInternalURL" -Value $EAS.InternalURL
