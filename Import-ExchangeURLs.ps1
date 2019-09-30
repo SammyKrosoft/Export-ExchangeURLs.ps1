@@ -1,6 +1,6 @@
 <#PSScriptInfo
 
-.VERSION 3.3.3
+.VERSION 3.3.4
 
 .GUID 0a1b89dc-e2b3-4e34-b1ad-e86ca7f6833d
 
@@ -112,8 +112,9 @@ $DebugPreference = "Stop"
 # Set Error Action to your needs
 $ErrorActionPreference = "Stop"
 #Script Version
-$ScriptVersion = "3.3.3"
+$ScriptVersion = "3.3.4"
 <# Version changes
+v3.3.4 - added -ExternalClientAuthentication for the Set-OutlookAnywhere part
 v3.3.3 - inc version to match Export-ExchangeURLs.ps1 (fix -ADPropertiesOnly)
 v3.3.2 - jumped version to match and sync with Export-ExchangeURLs.ps1
 v1.6.1 - changed author to Sam Drey and current company
@@ -532,7 +533,7 @@ Foreach ($CurrentServer in $ServersConfigs) {
         $OAcmd += " -ExternalHostName $($CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)") -ExternalClientsRequireSsl `$true -ExternalClientAuthenticationMethod Negotiate  -IISAuthenticationMethods @('Ntlm', 'Basic', 'Negotiate')"
         } Elseif ($CurrentServer.ServerVersion -match "14\."){
             # If Exchange 2010 server, then we set ExternalHostName, but without -ExternalClientsRequireSSL switch (that switch is for E2013/2016/2019 only)
-            $OAcmd += " -ExternalHostName $($CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)") -ExternalClientAuthenticationMethod NTLM"
+            $OAcmd += " -ExternalHostName $($CurrentServer."OutlookAnywhere-ExternalHostNAme(E2010+)") -ExternalClientAuthenticationMethod NTLM -ExternalClientsRequireSsl `$true"
         }
     } Else {
         $OAcmd += " -ExternalHostName `$null"
