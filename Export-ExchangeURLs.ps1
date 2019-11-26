@@ -1,6 +1,6 @@
 <#PSScriptInfo
 
-.VERSION 3.3.4
+.VERSION 3.3.5
 
 .GUID 0a1b89dc-e2b3-4e34-b1ad-e86ca7f6833d
 
@@ -90,8 +90,9 @@ $DebugPreference = "Continue"
 # Set Error Action to your needs
 $ErrorActionPreference = "SilentlyContinue"
 #Script Version
-$ScriptVersion = '3.3.4'
+$ScriptVersion = '3.3.5'
 <# Version History
+v3.3.5 - output on executing's user Documents folder instead of script directory
 v3.3.4 - added export server Site information as ServerSite
 v3.3.3 - added -ADPropertiesOnly for Get-MAPIVirtualDirectory
 v3.3.2 - removed "AutoDiscName" column as it's the same value as "ServerName"
@@ -277,7 +278,7 @@ foreach( $Server in $Servers)
 	If (!($DoNotExport)){
 		#Building the file name string using date, time, seconds ...
 		$DateAppend = Get-Date -Format "ddd-dd-MM-yyyy-\T\i\m\e-HH-mm-ss"
-		$CSVFilename=$PSScriptRoot+"\ExchangeURLs_"+$DateAppend+".csv"
+		$CSVFilename=($env:userprofile) + ("\Documents")+"\ExchangeURLs_"+$DateAppend+".csv"
 		#Exporting the final result into the output file (see just above for the file string building...
 		$report | Export-csv -notypeinformation -encoding Unicode $CSVFilename
 		Notepad $CSVFilename
