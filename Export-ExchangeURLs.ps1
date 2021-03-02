@@ -135,7 +135,7 @@ $Servers = @()
 
 $ServerVersionFilter = $null
 
-$ExchangeServers = Get-ExchangeServer *
+$ExchangeServers = Get-ExchangeServer * | ? {$_.ServerRole -match "Client"}
 
 #Filtering out Exchange versions
 # 14.x => Exchange 2010
