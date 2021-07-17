@@ -1,6 +1,6 @@
 <#PSScriptInfo
 
-.VERSION 3.3.5
+.VERSION 3.3.6
 
 .GUID 0a1b89dc-e2b3-4e34-b1ad-e86ca7f6833d
 
@@ -90,8 +90,9 @@ $DebugPreference = "Continue"
 # Set Error Action to your needs
 $ErrorActionPreference = "SilentlyContinue"
 #Script Version
-$ScriptVersion = '3.3.5'
+$ScriptVersion = '3.3.6'
 <# Version History
+v3.3.6 -> fixed another mistake : used Get-ExchangeServer | which roles = "*Client*" - but in Exchange 2016/2019 there are no more Client Access roles ... server role is just "Mailbox"
 v3.3.5 - output on executing's user Documents folder instead of script directory
 v3.3.4 - added export server Site information as ServerSite
 v3.3.3 - added -ADPropertiesOnly for Get-MAPIVirtualDirectory
